@@ -7,7 +7,6 @@
 //
 
 #import "MasterViewController.h"
-#import "MapRegionViewController.h"
 #import "AddRegionView.h"
 #import <dispatch/dispatch.h>
 
@@ -17,7 +16,7 @@
 
 @implementation MasterViewController
 
-@synthesize pageController, viewControllers;
+@synthesize pageController, viewControllers, currentMapController;
 @synthesize fadeView, navBarTitle, cities, addRegion;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
@@ -94,6 +93,25 @@
     
 }
 
+-(void)refreshCurrentView{
+    
+    
+    [fadeView setAlpha:1];
+    for (UILabel *l in fadeView.subviews) {
+        [l setText:@"Refreshing..."];
+    }
+    [self.navigationController setNavigationBarHidden:YES animated:YES];
+    
+    [self.view addSubview:fadeView];
+    [self performSelector:@selector(removeFadeView) withObject:self afterDelay:3];
+    double delayInSeconds = 0.1;
+    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
+    dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+        [currentMapController refreshTweets];
+        [currentMapController removeAnimatedOverlay];
+    });
+    
+}
 
 static NSTimer *timer;
 -(void)refreshAll{
@@ -160,7 +178,7 @@ static NSTimer *timer;
     navBarTitle.text = @"Current Location";
     [self.navigationItem setTitleView:navBarTitle];
     
-    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(refreshAll)];
+    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(refreshCurrentView)];
     [self.navigationItem.leftBarButtonItem setTintColor:[UIColor whiteColor]];
     
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addRegionToPages)];
@@ -296,6 +314,8 @@ static NSTimer *timer;
 - (UIViewController *)pageViewController:(UIPageViewController *)pageViewController viewControllerBeforeViewController:(UIViewController *)viewController {
     
     NSUInteger index = [(MapRegionViewController *)viewController index];
+    currentMapController = (MapRegionViewController *)viewController;
+    NSLog(@"Current city is: %@\n", currentMapController.cityName);
     
     if (index == 0) {
         return [self viewControllerAtIndex:([viewControllers count]-1)];
@@ -310,8 +330,7 @@ static NSTimer *timer;
 - (UIViewController *)pageViewController:(UIPageViewController *)pageViewController viewControllerAfterViewController:(UIViewController *)viewController {
     
     NSUInteger index = [(MapRegionViewController *)viewController index];
-    
-    
+    currentMapController = (MapRegionViewController *)viewController;
     index++;
     
     if (index == [viewControllers count]) {
