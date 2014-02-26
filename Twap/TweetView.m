@@ -8,7 +8,7 @@
 
 #import "TweetView.h"
 
-#define BTN_SIZE 45
+#define BTN_SIZE 35
 
 @implementation TweetView
 
@@ -24,12 +24,14 @@
 {
     self = [super initWithFrame:frame];
     if (self) {
+        [self setAlpha:0.9];
         // Initialization code
         [self setBackgroundColor:MAINCOLOR];
         //retweet
         retweet = [UIButton buttonWithType:UIButtonTypeCustom];
         [retweet setBackgroundImage:[self changeImage:[UIImage imageNamed:@"retweet.png"] toColor:[UIColor whiteColor]] forState:UIControlStateNormal];
-        [retweet setFrame:CGRectMake(DEVICEWIDTH-BTN_SIZE-10, 20, BTN_SIZE, BTN_SIZE)];
+        CGFloat btnOffset = (DEVICEWIDTH/2 - 2*BTN_SIZE)/3;
+        [retweet setFrame:CGRectMake(DEVICEWIDTH/2 +btnOffset, TV_HEIGHT-45, BTN_SIZE, BTN_SIZE)];
         [retweet setBackgroundColor:[UIColor clearColor]];
         [retweet.layer setCornerRadius:BTN_SIZE/2];
         [retweet addTarget:self action:@selector(retweetBtnPress) forControlEvents:UIControlEventTouchUpInside];
@@ -40,7 +42,7 @@
         //favorite
         favorite = [UIButton buttonWithType:UIButtonTypeCustom];
         [favorite setBackgroundImage:[self changeImage:[UIImage imageNamed:@"favorite.png"] toColor:[UIColor whiteColor]] forState:UIControlStateNormal];
-        [favorite setFrame:CGRectMake(DEVICEWIDTH-BTN_SIZE-10, BTN_SIZE+40, BTN_SIZE, BTN_SIZE)];
+        [favorite setFrame:CGRectMake(DEVICEWIDTH/2+btnOffset*2+BTN_SIZE, TV_HEIGHT-45, BTN_SIZE, BTN_SIZE)];
         [favorite setBackgroundColor:[UIColor clearColor]];
         [favorite.layer setCornerRadius:BTN_SIZE/2];
         [favorite addTarget:self action:@selector(favoriteBtnPress) forControlEvents:UIControlEventTouchUpInside];
@@ -49,18 +51,19 @@
         //[favorite.layer setBorderColor:[UIColor whiteColor].CGColor];
         
         //pic
-        pic = [[UIImageView alloc] initWithFrame:CGRectMake(10, self.frame.size.height-45, 35, 35)];
+        pic = [[UIImageView alloc] initWithFrame:CGRectMake(10, TV_HEIGHT-45, 35, 35)];
         [pic setBackgroundColor:[UIColor whiteColor]];
         [pic.layer setCornerRadius:7];
         
         //name
-        name = [[UILabel alloc] initWithFrame:CGRectMake(60, self.frame.size.height-45, 70, 35)];
+        name = [[UILabel alloc] initWithFrame:CGRectMake(55, TV_HEIGHT-45, 105, 35)];
         name.adjustsFontSizeToFitWidth = YES;
         [name setText:@"Name"];
         [name setTextColor:[UIColor whiteColor]];
         [name setBackgroundColor:[UIColor clearColor]];
         [name setFont:[self fontWithSize:18]];
         
+        /*
         //timestamp
         timeStamp = [[UILabel alloc] initWithFrame:CGRectMake(140, self.frame.size.height-45, 90, 35)];
         timeStamp.adjustsFontSizeToFitWidth = YES;
@@ -68,12 +71,13 @@
         [timeStamp setTextColor:[UIColor whiteColor]];
         [timeStamp setBackgroundColor:[UIColor clearColor]];
         [timeStamp setFont:[self fontWithSize:18]];
+         */
         
         //text
-        text = [[UILabel alloc] initWithFrame:CGRectMake(10, 10, DEVICEWIDTH-BTN_SIZE-30, self.frame.size.height-50)];
+        text = [[UILabel alloc] initWithFrame:CGRectMake(10, 10, DEVICEWIDTH-20, self.frame.size.height-50)];
         text.adjustsFontSizeToFitWidth = YES;
         [text setNumberOfLines:3];
-        [text setText:@"This is a tweet with hopefullt less than 160 characters cool brah!!!! i bet this will make it be more ok?????"];
+        [text setText:@"This is a tweet with hopefully less than 160 characters cool brah!!!! I bet this will make it be more ok?????"];
         [text setTextColor:[UIColor whiteColor]];
         [text setBackgroundColor:[UIColor clearColor]];
         [text setFont:[self fontWithSize:18]];
@@ -83,7 +87,7 @@
         [self addSubview:retweet];
         [self addSubview:favorite];
         [self addSubview:name];
-        [self addSubview:timeStamp];
+        //[self addSubview:timeStamp];
         [self addSubview:text];
         [self addSubview:pic];
         
@@ -111,8 +115,8 @@
 -(void)finishRetweet{
     
     dispatch_queue_t background = dispatch_queue_create("background", NULL);
-    dispatch_barrier_async(background, ^{
-        //[[[TwitterDataHandler sharedInstance] twitterDeveloper] retweet:id_str];
+    dispatch_async(background, ^{
+        [[[TwitterDataHandler sharedInstance] twitterDeveloper] retweet:id_str];
     });
     
     [self hasBeenRetweeted];
@@ -146,15 +150,17 @@
 {
      NSLog(@"Favorite pressed\n");
     dispatch_queue_t background2 = dispatch_queue_create("background2", NULL);
-    dispatch_barrier_async(background2, ^{
+    dispatch_async(background2, ^{
         //[[[TwitterDataHandler sharedInstance] twitterDeveloper] favorite:id_str Is_Create:(!favorited)];
     });
     if(favorited){
         [self hasBeenUnfavorited];
+        [[[TwitterDataHandler sharedInstance] twitterDeveloper] favorite:id_str Is_Create:NO];
         favorited = false;
     }
     else{
         [self hasBeenFavorited];
+        [[[TwitterDataHandler sharedInstance] twitterDeveloper] favorite:id_str Is_Create:YES];
         favorited = true;
     }
 }
@@ -235,8 +241,8 @@
     CGColorSpaceRef rgbColorspace;
     size_t num_locations = 2;
     CGFloat locations[2] = { 0.0, 1.0 };
-    CGFloat components[8] = { 1.0, 1.0, 1.0, 0.35,  // Start color
-        1.0, 1.0, 1.0, 0.06 }; // End color
+    CGFloat components[8] = { 0.7, 0.7, 0.7, 0.55,  // Start color
+        0.5, 0.5, 0.5, 0.02 }; // End color
     
     rgbColorspace = CGColorSpaceCreateDeviceRGB();
     glossGradient = CGGradientCreateWithColorComponents(rgbColorspace, components, locations, num_locations);

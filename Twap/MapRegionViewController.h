@@ -18,10 +18,15 @@
 @property (nonatomic, strong) TweetView *tweetView;
 @property (nonatomic, strong) NSString *cityName;
 @property (nonatomic, strong) NSTimer *timer;
+@property (nonatomic, strong) NSTimer *refreshTimer;
+@property BOOL visible;
 @property double mapDist;
+@property NSUInteger annotationCount;
 
 -(id) initWithMapRegion:(MKCoordinateRegion)coordRegion;
 -(void) refreshTweets;
 -(void)removeAnimatedOverlay;
+-(void) startRefreshTimer;
+-(void)stopTimer;
 
 @end

@@ -8,19 +8,23 @@
 
 #import "AddRegionView.h"
 
+
 @implementation AddRegionView
 
-@synthesize input, resign, instructions;
+@synthesize input, resign, instructions, promptView, newCoord, place;
 
 - (id)initWithFrame:(CGRect)frame
 {
     self = [super initWithFrame:frame];
     if (self) {
         // Initialization code
+        
+        place = nil;
+        
         [self setBackgroundColor:[UIColor darkGrayColor]];
         input = [[UITextField alloc] init];
         [input setBackgroundColor:[UIColor lightGrayColor]];
-        [input setFrame:CGRectMake(0, 100, 320, 40)];
+        [input setFrame:CGRectMake(0, 100, DEVICEWIDTH, 40)];
         [input setTextColor:MAINCOLOR];
         [input setText:@""];
         [input setFont:[UIFont fontWithName:@"GillSans-Light" size:24]];
@@ -40,6 +44,42 @@
         resign.alpha = 0;
         [self addSubview:resign];
         
+        CGFloat promptViewDepth = 160;
+        promptView = [[UIView alloc] initWithFrame:CGRectMake(0, promptViewDepth, DEVICEWIDTH, 100)];
+        [promptView setBackgroundColor:[UIColor clearColor]];
+        //yes button
+        UIButton *yesBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        [yesBtn setBackgroundColor:[UIColor clearColor]];
+        [yesBtn setFrame:CGRectMake(3*DEVICEWIDTH/5, 18, DEVICEWIDTH/5, DEVICEWIDTH/5)];
+        [yesBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        [yesBtn.titleLabel setFont:[UIFont fontWithName:@"GillSans-Light" size:16]];
+        [yesBtn setTitle:@"Yes" forState:UIControlStateNormal];
+        [yesBtn.layer setBorderColor:[UIColor whiteColor].CGColor];
+        [yesBtn.layer setBorderWidth:1];
+        [yesBtn.layer setCornerRadius:yesBtn.frame.size.width/2];
+        [yesBtn addTarget:self action:@selector(yesButtonPressed) forControlEvents:UIControlEventTouchUpInside];
+        [yesBtn addTarget:self action:@selector(highlightBtn:) forControlEvents:UIControlEventTouchDown];
+        [yesBtn addTarget:self action:@selector(unHighlightBtn:) forControlEvents:UIControlEventTouchUpInside];
+        [yesBtn addTarget:self action:@selector(unHighlightBtn:) forControlEvents:UIControlEventTouchDragOutside];
+        // no button
+        UIButton *noBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        [noBtn setBackgroundColor:[UIColor clearColor]];
+        [noBtn setFrame:CGRectMake(DEVICEWIDTH/5, 18, DEVICEWIDTH/5, DEVICEWIDTH/5)];
+        [noBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        [noBtn.titleLabel setFont:[UIFont fontWithName:@"GillSans-Light" size:16]];
+        [noBtn setTitle:@"No" forState:UIControlStateNormal];
+        [noBtn.layer setBorderColor:[UIColor whiteColor].CGColor];
+        [noBtn.layer setBorderWidth:1];
+        [noBtn.layer setCornerRadius:yesBtn.frame.size.width/2];
+        [noBtn addTarget:self action:@selector(noBtnPressed) forControlEvents:UIControlEventTouchUpInside];
+        [noBtn addTarget:self action:@selector(highlightBtn:) forControlEvents:UIControlEventTouchDown];
+        [noBtn addTarget:self action:@selector(unHighlightBtn:) forControlEvents:UIControlEventTouchUpInside];
+        [noBtn addTarget:self action:@selector(unHighlightBtn:) forControlEvents:UIControlEventTouchDragOutside];
+        //prmp view add subviews
+        [promptView addSubview:yesBtn];
+        [promptView addSubview:noBtn];
+        [promptView setAlpha:0];
+        
         instructions = [[UILabel alloc] initWithFrame:CGRectMake(20, 10, DEVICEWIDTH-40, 80)];
         [instructions setBackgroundColor:[UIColor clearColor]];
         [instructions setTextAlignment:NSTextAlignmentCenter];
@@ -56,7 +96,7 @@
 
 -(void)animateInputBar{
     
-    [UIView animateWithDuration:0.4 delay:0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+    [UIView animateWithDuration:0.2 delay:0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
         [input setAlpha:1.0];
         [resign setAlpha:1.0];
         
@@ -67,6 +107,15 @@
 
 -(BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string
 {
+    return YES;
+}
+
+-(BOOL)textFieldShouldBeginEditing:(UITextField *)textField
+{
+    if(place)
+    {
+        return NO;
+    }
     return YES;
 }
 
@@ -82,18 +131,22 @@
                 double lat = mark.location.coordinate.latitude;
                 double lng = mark.location.coordinate.longitude;
                 NSLog(@"lat and long for new region are %f, %f", lat, lng);
-                [self.delegate addRegionWithCoordinate:CLLocationCoordinate2DMake(lat, lng) andText:textField.text];
-                [self cancel];
-                [textField resignFirstResponder];
+                [self promptForCorrectPlace];
+                place = [(NSArray *)[[mark addressDictionary] objectForKey:@"FormattedAddressLines"] objectAtIndex:0];
+                NSLog(@"Place is %@", place);
+                newCoord = CLLocationCoordinate2DMake(lat, lng);
+                [textField setText:place];
                 [textField setTag:69];
             }
             else{
                 [instructions setText:@"Invalid input. Please try again."];
+                [textField setText:@""];
             }
             
         }
         else{
             [instructions setText:@"Invalid input. Please try again."];
+            [textField setText:@""];
         }
     }];
     
@@ -104,6 +157,96 @@
     return NO;
 }
 
+-(void)noBtnPressed
+{
+    [promptView removeFromSuperview];
+    [instructions setText:@"Enter a city or zipcode..."];
+    [input setText:@""];
+    place = nil;
+}
+
+-(void)yesButtonPressed
+{
+    [UIView animateWithDuration:0.3 delay:0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+        promptView.alpha = 0;
+    } completion:^(BOOL finished) {
+        [promptView removeFromSuperview];
+    }];
+    // check to see if one needs deleting
+    NSArray *cities = [self.delegate askForCities];
+    if(cities.count >= CITYLIMIT){
+        [instructions setText:@"Choose a location to delete..."];
+        [input setText:@"Too much for the TWAP!!!"];
+        
+        UISegmentedControl *cityPicker = [[UISegmentedControl alloc] initWithItems:cities];
+        [cityPicker setFrame:CGRectMake(20, promptView.frame.origin.y+30, DEVICEWIDTH-40, 40)];
+        [cityPicker setBackgroundColor:MAINCOLOR];
+        [cityPicker setTintColor:[UIColor whiteColor]];
+        [cityPicker setAlpha:0.9];
+        UIFont *font = [UIFont fontWithName:@"GillSans-Light" size:14.0];
+        NSDictionary *attributes = [NSDictionary dictionaryWithObject:font forKey:NSFontAttributeName];
+        [cityPicker setTitleTextAttributes:attributes forState:UIControlStateNormal];
+        [cityPicker addTarget:self action:@selector(pickerChanged:) forControlEvents:UIControlEventValueChanged];
+        [cityPicker.layer setCornerRadius:0];
+        //[cityPicker.layer setBorderColor:[UIColor whiteColor].CGColor];
+        //[cityPicker.layer setBorderWidth:1.0];
+        [self addSubview:cityPicker];
+    }
+    else{
+        [input resignFirstResponder];
+        [self.delegate addRegionWithCoordinate:newCoord andText:place andReplacement:0];
+        [self cancel];
+    }
+}
+
+-(void)pickerChanged:(UISegmentedControl *)picker
+{
+    NSArray *cities = [self.delegate askForCities];
+    NSString *msg = [NSString stringWithFormat:@"you want to replace %@ with %@?",[cities objectAtIndex: [picker selectedSegmentIndex]], place];
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:[NSString stringWithFormat:@"Are you sure..."]
+                                                    message:msg
+                                                   delegate:self cancelButtonTitle:@"NO" otherButtonTitles: @"YES", nil];
+    alert.tag = [picker selectedSegmentIndex];
+    [alert show];
+}
+
+-(void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    NSString *title = [alertView buttonTitleAtIndex:buttonIndex];
+    if([title isEqualToString:@"YES"])
+    {
+        [input resignFirstResponder];
+        [self.delegate addRegionWithCoordinate:newCoord andText:place andReplacement:alertView.tag];
+        [self cancel];
+    }
+    else if([title isEqualToString:@"NO"])
+    {
+        return;
+    }
+}
+
+-(void)highlightBtn:(UIButton *)sender
+{
+    [sender setBackgroundColor:MAINCOLOR];
+    [sender setAlpha:0.8];
+}
+
+-(void)unHighlightBtn:(UIButton *)sender
+{
+    [UIView animateWithDuration:0.3 delay:0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+        [sender setBackgroundColor:[UIColor clearColor]];
+        [sender setAlpha:1.0];
+    } completion:nil];
+}
+
+-(void)promptForCorrectPlace
+{
+    [instructions setText:@"Is this correct?"];
+    [self addSubview:promptView];
+    [UIView animateWithDuration:0.4 delay:0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+        [promptView setAlpha:0.8];
+    } completion:nil];
+}
 
 -(void)cancel{
     [UIView animateWithDuration:0.3 animations:^{
@@ -111,6 +254,7 @@
     }];
     [self removeFromSuperview];
     self.shown = FALSE;
+    place = nil;
 }
 
 

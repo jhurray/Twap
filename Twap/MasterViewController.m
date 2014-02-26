@@ -7,8 +7,8 @@
 //
 
 #import "MasterViewController.h"
-#import "AddRegionView.h"
 #import <dispatch/dispatch.h>
+
 
 @interface MasterViewController ()
 
@@ -19,9 +19,10 @@
 @synthesize pageController, viewControllers, currentMapController;
 @synthesize fadeView, navBarTitle, cities, addRegion;
 
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+
+-(id)initWithCities:(NSArray *)cityArray
 {
-    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    self = [super initWithNibName:nil bundle:nil];
     if (self) {
         // Custom initialization
         
@@ -41,24 +42,40 @@
         currentLocationMapRegion.index = [viewControllers count];
         [self.viewControllers addObject:currentLocationMapRegion];
         
-         cities = [NSMutableArray arrayWithObjects: @"San Francisco", @"Boston", nil];
+        cities = [NSMutableArray arrayWithArray:cityArray];
         
         [self loadCities];
     }
     return self;
 }
 
--(void)addRegionWithCoordinate:(CLLocationCoordinate2D)coord andText:(NSString *)text{
+-(NSArray *)askForCities
+{
+    return cities;
+}
+
+-(void)addRegionWithCoordinate:(CLLocationCoordinate2D)coord andText:(NSString *)text andReplacement:(NSUInteger)index{
     
     MKCoordinateRegion viewRegion = MKCoordinateRegionMakeWithDistance(coord, 1.5*MILES*METERS_PER_MILE,1.5*MILES*METERS_PER_MILE);
     MapRegionViewController *currentLocationMapRegion = [[MapRegionViewController alloc] initWithMapRegion:viewRegion];
+    NSLog(@"%@", cities);
+    if(cities.count == CITYLIMIT){
+        [cities removeObject:[cities objectAtIndex:index]];
+        [viewControllers removeObject:[viewControllers objectAtIndex:index+1]];
+        NSLog(@"Citys = %ui, vcs = %ui", (unsigned int)cities.count, (unsigned int)viewControllers.count);
+        assert(cities.count == viewControllers.count-1);
+        for (int i = 0; i < CITYLIMIT; ++i) {
+            ((MapRegionViewController *)[viewControllers objectAtIndex:i]).index = i;
+        }
+    }
     currentLocationMapRegion.cityName = text;
     [cities addObject:text];
     currentLocationMapRegion.index = [viewControllers count];
     [viewControllers addObject:currentLocationMapRegion];
     
+    __block UILabel *blockNavTitle = navBarTitle;
     [pageController setViewControllers:[NSArray arrayWithObject:currentLocationMapRegion] direction:UIPageViewControllerNavigationDirectionForward animated:YES completion:^(BOOL finished) {
-        [navBarTitle setText:text];
+        [blockNavTitle setText:text];
     }];
     
 }
@@ -87,11 +104,12 @@
         }
         if(cities.count+1 > viewControllers.count){
             [self loadCities];
-            NSLog(@"%lu, %lu", cities.count, viewControllers.count);
+            NSLog(@"%lu, %lu", (unsigned long)cities.count, (unsigned long)viewControllers.count);
         }
     }];
     
 }
+
 
 -(void)refreshCurrentView{
     
@@ -123,21 +141,6 @@ static NSTimer *timer;
     [self.navigationController setNavigationBarHidden:YES animated:YES];
     [self.view addSubview:fadeView];
     
-    /*
-    dispatch_queue_t refreshQueue = dispatch_queue_create("refresher", NULL);
-    
-    NSUInteger currentIndex = ((MapRegionViewController *)pageController.viewControllers[0]).index;
-    
-    MapRegionViewController *mrVC = [viewControllers objectAtIndex:currentIndex];
-    [mrVC refreshTweets];
-    dispatch_async(refreshQueue, ^{
-        for (MapRegionViewController *m in viewControllers) {
-            if(m.index != currentIndex){
-                [m refreshTweets];
-            }
-        }
-    });
-     */
     for (MapRegionViewController *m in viewControllers) {
 
         [m refreshTweets];
@@ -279,14 +282,15 @@ static NSTimer *timer;
         }];
     }
     
-    
+    __weak MasterViewController *me = self;
     NSArray *vcs = [NSArray arrayWithObject:viewControllers[0]];
     [pageController setViewControllers:vcs direction:UIPageViewControllerNavigationDirectionForward animated:YES completion:^(BOOL finished) {
-        [self performSelector:@selector(removeFadeView) withObject:self afterDelay:1.0];
+        [me performSelector:@selector(removeFadeView) withObject:me afterDelay:2.0];
     }];
     
     //[self removeFadeView];
 }
+
 
 -(void)removeFadeView{
     [UIView animateWithDuration:0.8 delay:0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
@@ -362,6 +366,10 @@ static NSString *cityName;
 {
     [navBarTitle setAlpha:1];
     if(completed){
+        ((MapRegionViewController *)previousViewControllers[0]).visible = FALSE;
+        ((MapRegionViewController *)pageViewController.viewControllers[0]).visible = FALSE;
+        [((MapRegionViewController *)previousViewControllers[0]) startRefreshTimer];
+        [((MapRegionViewController *)pageViewController.viewControllers[0]) stopTimer];
         [navBarTitle setText:cityName];
     }
 }

@@ -18,9 +18,59 @@
 - (TwitterDeveloper *)initAsDeveloper
 {
     self = [super init];
-    [self setAccess_token:@"736530565-wGvNFWsfY7e1AD2dKLWWqgwv1mEhmaJbawZQYrez"];
-    [self setAccess_token_secret:@"icvZECvQ8w9UJrXWsFvVheeV8FcmfiiHnmyHGkNTxGI"];
+    
+    //SET THIS TO MY OWN
+    /*
+     
+     from https://dev.twitter.com/apps/5759423/show
+     
+     [self setAccess_token:@""];
+     [self setAccess_token_secret:@""];
+     */
     return self;
+}
+
+- (void)tweetsSearch:(NSString *)URLString GeoLocation:(CLLocationCoordinate2D)geocode Range:(double)range withBlock:(void (^)(NSData *data))block
+{
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        ACAccountStore *account = [[ACAccountStore alloc] init];
+        ACAccountType *accountType = [account accountTypeWithAccountTypeIdentifier:ACAccountTypeIdentifierTwitter];
+        [account requestAccessToAccountsWithType:accountType options:nil completion:^(BOOL granted, NSError *error) {
+            
+            if (granted)
+            {
+                NSArray *arrayOfAccounts = [account accountsWithAccountType:accountType];
+                if (arrayOfAccounts.count > 0)
+                {
+                    NSURL *requestURL = [NSURL URLWithString:URLString];
+                    NSMutableDictionary *parameters = [[NSMutableDictionary alloc] init];
+                    NSString *geoString = [[NSString alloc] initWithFormat:@"%f,%f,%fmi", geocode.latitude, geocode.longitude, range];
+                    [parameters setObject:geoString forKey:@"geocode"];
+                    [parameters setObject:@"200" forKey:@"count"];
+                    //[parameters setObject:@"" forKey:@"q"];
+                    SLRequest *request = [SLRequest requestForServiceType:SLServiceTypeTwitter requestMethod:SLRequestMethodGET URL:requestURL parameters:parameters];
+                    [request setAccount:arrayOfAccounts[0]];
+                    [request performRequestWithHandler:^(NSData *responseData, NSHTTPURLResponse *urlResponse, NSError *error)
+                     {
+                         dispatch_sync(dispatch_get_main_queue(), ^{
+                            block(responseData);
+                         });
+                     }];
+                }
+                else
+                {
+                    NSLog(@"No available account!");
+                }
+            }
+            else
+            {
+                NSLog(@"Not granted!");
+            }
+            
+            
+        }];
+    });
+    
 }
 
 - (NSData *)tweetsSearch:(NSString *)URLString GeoLocation:(CLLocationCoordinate2D)geocode Range:(double)range
@@ -35,18 +85,20 @@
             NSArray *arrayOfAccounts = [account accountsWithAccountType:accountType];
             if (arrayOfAccounts.count > 0)
             {
+                /*
                 ACAccount *twitter_account = [arrayOfAccounts objectAtIndex:0];
                 ACAccountCredential *twitter_account_credential = [[ACAccountCredential alloc] initWithOAuthToken:self.access_token tokenSecret:self.access_token_secret];
                 [twitter_account setCredential:twitter_account_credential];
+                 */
                 
                 NSURL *requestURL = [NSURL URLWithString:URLString];
                 NSMutableDictionary *parameters = [[NSMutableDictionary alloc] init];
                 NSString *geoString = [[NSString alloc] initWithFormat:@"%f,%f,%fmi", geocode.latitude, geocode.longitude, range];
                 [parameters setObject:geoString forKey:@"geocode"];
                 [parameters setObject:@"500" forKey:@"count"];
-                [parameters setObject:@"" forKey:@"q"];
+                //[parameters setObject:@"" forKey:@"q"];
                 SLRequest *request = [SLRequest requestForServiceType:SLServiceTypeTwitter requestMethod:SLRequestMethodGET URL:requestURL parameters:parameters];
-                [request setAccount:twitter_account];
+                [request setAccount:arrayOfAccounts[0]];
                 [request performRequestWithHandler:^(NSData *responseData, NSHTTPURLResponse *urlResponse, NSError *error)
                  {
                      tweetsData = responseData;

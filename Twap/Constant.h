@@ -19,7 +19,9 @@
 
 #define METERS_PER_MILE 1609.344
 
-#define MILES 30
+#define MILES 20
 #define KEYBOARDHEIGHT 216
+
+#define CITYLIMIT 3
 
 #endif

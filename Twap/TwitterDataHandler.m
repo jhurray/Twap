@@ -32,15 +32,16 @@ static TwitterDataHandler *sharedClient;
     return sharedClient;
 }
 
-- (NSDictionary *)fetchTweetsAtCoord:(CLLocationCoordinate2D)coord andRange:(double)range
+- (void)fetchTweetsAtCoord:(CLLocationCoordinate2D)coord andRange:(double)range withBlock:(void (^) (NSDictionary * dict))block
 {
     NSString *tweetsSearchURL = @"https://api.twitter.com/1.1/search/tweets.json?";
-    NSData *tweetsData = [twitterDeveloper tweetsSearch:tweetsSearchURL GeoLocation:coord Range:range];
-    NSError *error = nil;
-    NSDictionary *tweetsDic = [NSJSONSerialization JSONObjectWithData:tweetsData options:NSJSONReadingMutableContainers|NSJSONReadingAllowFragments error:&error];
-    tweetsDic = [tweetsDic objectForKey:@"statuses"];
-    NSLog(@"\nFetching tweets...%lu\n", [tweetsDic count]);
-    return tweetsDic;
+    [twitterDeveloper tweetsSearch:tweetsSearchURL GeoLocation:coord Range:range withBlock:^(NSData *data) {
+        NSError *error = nil;
+        NSDictionary *tweetsDic = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers|NSJSONReadingAllowFragments error:&error];
+        tweetsDic = [tweetsDic objectForKey:@"statuses"];
+        NSLog(@"\nFetching tweets...%lu\n", (unsigned long)[tweetsDic count]);
+        block(tweetsDic);
+    }];
 }
 
 @end

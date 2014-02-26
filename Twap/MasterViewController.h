@@ -18,4 +18,7 @@
 @property (nonatomic, strong) UILabel *navBarTitle;
 @property (nonatomic, strong) NSMutableArray *cities;
 @property (nonatomic, strong) AddRegionView *addRegion;
+
+-(id)initWithCities:(NSArray *)cityArray;
+
 @end

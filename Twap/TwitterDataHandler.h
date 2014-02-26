@@ -28,6 +28,6 @@
 
 +(id) sharedInstance;
 
-- (NSDictionary *)fetchTweetsAtCoord:(CLLocationCoordinate2D)coord andRange:(double)range;
+- (void)fetchTweetsAtCoord:(CLLocationCoordinate2D)coord andRange:(double)range withBlock:(void (^) (NSDictionary * dict))block;
 
 @end

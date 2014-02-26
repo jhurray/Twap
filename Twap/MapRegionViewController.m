@@ -25,9 +25,12 @@
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
     if (self) {
         // Custom initialization
+        self.visible = FALSE;
+        self.annotationCount = 0;
     }
     return self;
 }
+
 
 -(void)performFade{
     
@@ -39,8 +42,11 @@
         [tweetView fadeOutWithNewTweet:blankTweet];
         return;
     }
-    NSUInteger rand = arc4random()%[map.annotations count];
-    Tweet *tweet = (Tweet *)[map.annotations objectAtIndex:rand];
+    if (self.annotationCount == map.annotations.count) {
+        self.annotationCount = 0;
+    }
+    Tweet *tweet = (Tweet *)[map.annotations objectAtIndex:self.annotationCount];
+    self.annotationCount++;
     [self addAnimatedOverlayToAnnotation:tweet];
     [tweetView fadeOutWithNewTweet:tweet];
     
@@ -68,6 +74,7 @@
     if(self = [super initWithNibName:nil bundle:nil]){
         map = [[MKMapView alloc] initWithFrame:CGRectMake(0, 64, DEVICEWIDTH, DEVICEHEIGHT-64-TV_HEIGHT)];
         [map setScrollEnabled:NO];
+        [map setRotateEnabled:NO];
         [map setZoomEnabled:NO];
         [map setRegion:coordRegion];
         map.delegate = self;
@@ -118,22 +125,44 @@ static AnimatedOverlay *animatedOverlay;
     }
 }
 
+-(void)startRefreshTimer
+{
+    self.refreshTimer = [NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(timerSelector) userInfo:nil repeats:NO];
+}
+
+-(void)timerSelector{
+    NSLog(@"\n\nBOOM %@!!!!!\n\n", cityName);
+    [self refreshTweets];
+}
+
+-(void)stopTimer
+{
+    NSLog(@"\n\nInvalidating %@!!!!!\n\n", cityName);
+    [self.refreshTimer invalidate];
+}
+
 -(void)refreshTweets{
     
-    [map removeAnnotations:map.annotations];
-    NSDictionary *tweetsResults = [[TwitterDataHandler sharedInstance] fetchTweetsAtCoord:map.centerCoordinate andRange:(0.7*MILES)];
-    //NSLog(@"\n\ncenter = %f, %f\n\n", map.centerCoordinate.latitude, map.centerCoordinate.longitude);
-    for (NSDictionary *subDic in tweetsResults)
-    {
-        NSString *geoString = [[NSString alloc] initWithFormat:@"%@", [subDic objectForKey:@"geo"]];
-        if (![geoString isEqualToString:@"<null>"])
-            //Tweets that have "geo"
+    self.annotationCount = 0;
+    
+    __block NSDictionary *tweetsResults = nil;
+    [[TwitterDataHandler sharedInstance] fetchTweetsAtCoord:map.centerCoordinate andRange:(0.7*MILES) withBlock:^(NSDictionary *dict) {
+        tweetsResults = dict;
+        [map removeAnnotations:map.annotations];
+        //NSLog(@"\n\ncenter = %f, %f\n\n", map.centerCoordinate.latitude, map.centerCoordinate.longitude);
+        for (NSDictionary *subDic in tweetsResults)
         {
-            //NSLog(@"geostring is %@\n", geoString);
-            Tweet *tweet = [[Tweet alloc] initWithJSONDic:subDic];
-            [self addTweet:tweet];
+            NSString *geoString = [[NSString alloc] initWithFormat:@"%@", [subDic objectForKey:@"geo"]];
+            if (![geoString isEqualToString:@"<null>"])
+                //Tweets that have "geo"
+            {
+                //NSLog(@"geostring is %@\n", geoString);
+                Tweet *tweet = [[Tweet alloc] initWithJSONDic:subDic];
+                [self addTweet:tweet];
+            }
         }
-    }
+        [self performFade];
+    }];
 }
 
 - (MKAnnotationView *)mapView:(MKMapView *)mapView viewForAnnotation:(id<MKAnnotation>)annotation
@@ -150,12 +179,6 @@ static AnimatedOverlay *animatedOverlay;
         {
             [annotationView setAnnotation:annotation];
         }
-        // Button
-        UIButton *button = [UIButton buttonWithType:UIButtonTypeDetailDisclosure];
-        [button setFrame:CGRectMake(0, 0, 23, 23)];
-        //[button setTag:[self.tagArray indexOfObject:((Tweet *)annotation).id_str]];
-        //[button addTarget:self action:@selector(tweetDetail:) forControlEvents:UIControlEventTouchUpInside];
-        annotationView.rightCalloutAccessoryView = button;
         
         // Image and two labels
         UIImageView *imageView = [[UIImageView alloc] initWithImage:((Tweet *)annotation).image];
@@ -165,6 +188,9 @@ static AnimatedOverlay *animatedOverlay;
         UIImage *bird = [UIImage imageNamed:@"bird.png"];
         [annotationView setImage:bird];
         [annotationView setEnabled:YES];
+        
+        [annotationView.layer setTransform:CATransform3DMakeRotation(-M_PI/5, 0, 0, 1)];
+        
         return annotationView;
     }
     return nil;

@@ -18,7 +18,12 @@
     self.window.backgroundColor = [UIColor whiteColor];
     [application setStatusBarHidden:NO];
     [application setStatusBarStyle:UIStatusBarStyleLightContent];
-     self.masterVC = [[MasterViewController alloc] initWithNibName:nil bundle:nil];
+    
+    NSArray *cities = [[NSUserDefaults standardUserDefaults] objectForKey:@"Cities"];
+    if (!cities) {
+        cities = [NSArray arrayWithObjects: @"San Francisco", @"Boston", @"Seattle", nil];
+    }
+    self.masterVC = [[MasterViewController alloc] initWithCities:cities];
     [self.window setRootViewController:[[UINavigationController alloc] initWithRootViewController:self.masterVC]];
     
     [self.window makeKeyAndVisible];
@@ -53,6 +58,8 @@
 - (void)applicationWillTerminate:(UIApplication *)application
 {
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+    [[NSUserDefaults standardUserDefaults] setObject:self.masterVC.cities forKey:@"Cities"];
+
 }
 
 @end
