@@ -15,6 +15,10 @@
 {
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     // Override point for customization after application launch.
+    
+    //start location manager
+    [[LocationGetter sharedInstance] startUpdates];
+    
     self.window.backgroundColor = [UIColor whiteColor];
     [application setStatusBarHidden:NO];
     [application setStatusBarStyle:UIStatusBarStyleLightContent];

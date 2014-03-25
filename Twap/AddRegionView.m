@@ -11,7 +11,7 @@
 
 @implementation AddRegionView
 
-@synthesize input, resign, instructions, promptView, newCoord, place;
+@synthesize input, instructions, promptView, newCoord, place, cityPicker;
 
 - (id)initWithFrame:(CGRect)frame
 {
@@ -20,11 +20,20 @@
         // Initialization code
         
         place = nil;
-        
+        CGFloat height = self.frame.size.height;
         [self setBackgroundColor:[UIColor darkGrayColor]];
+        
+        instructions = [[UILabel alloc] initWithFrame:CGRectMake(20, 10, DEVICEWIDTH-40, height/3.6)];
+        [instructions setBackgroundColor:[UIColor clearColor]];
+        [instructions setTextAlignment:NSTextAlignmentCenter];
+        instructions.adjustsFontSizeToFitWidth = YES;
+        [instructions setText:@"Enter a city or zipcode..."];
+        [instructions setTextColor:[UIColor whiteColor]];
+        [instructions setFont:[UIFont fontWithName:@"GillSans-Light" size:30]];
+        
         input = [[UITextField alloc] init];
         [input setBackgroundColor:[UIColor lightGrayColor]];
-        [input setFrame:CGRectMake(0, 100, DEVICEWIDTH, 40)];
+        [input setFrame:CGRectMake(0,instructions.frame.size.height+10 , DEVICEWIDTH, height/7.2)];
         [input setTextColor:MAINCOLOR];
         [input setText:@""];
         [input setFont:[UIFont fontWithName:@"GillSans-Light" size:24]];
@@ -35,22 +44,15 @@
         [input setAlpha:0];
         [self addSubview:input];
         
-        resign = [UIButton buttonWithType:UIButtonTypeCustom];
-        [resign setBackgroundColor:MAINCOLOR];
-        [resign setFrame:CGRectMake(280, 80, 40, 40)];
-        [resign.layer setCornerRadius:20];
-        [resign setTitle:@"X" forState:UIControlStateNormal];
-        [resign addTarget:self action:@selector(cancel) forControlEvents:UIControlEventTouchUpInside];
-        resign.alpha = 0;
-        [self addSubview:resign];
         
-        CGFloat promptViewDepth = 160;
-        promptView = [[UIView alloc] initWithFrame:CGRectMake(0, promptViewDepth, DEVICEWIDTH, 100)];
+        CGFloat promptViewDepth = height/1.8;
+        promptView = [[UIView alloc] initWithFrame:CGRectMake(0, promptViewDepth, DEVICEWIDTH, height/2.88)];
         [promptView setBackgroundColor:[UIColor clearColor]];
         //yes button
+        CGFloat sizeRatio = height/288;
         UIButton *yesBtn = [UIButton buttonWithType:UIButtonTypeCustom];
         [yesBtn setBackgroundColor:[UIColor clearColor]];
-        [yesBtn setFrame:CGRectMake(3*DEVICEWIDTH/5, 18, DEVICEWIDTH/5, DEVICEWIDTH/5)];
+        [yesBtn setFrame:CGRectMake(DEVICEWIDTH-DEVICEWIDTH/5*(1+sizeRatio), 18, DEVICEWIDTH/5*sizeRatio, DEVICEWIDTH/5*sizeRatio)];
         [yesBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
         [yesBtn.titleLabel setFont:[UIFont fontWithName:@"GillSans-Light" size:16]];
         [yesBtn setTitle:@"Yes" forState:UIControlStateNormal];
@@ -64,7 +66,7 @@
         // no button
         UIButton *noBtn = [UIButton buttonWithType:UIButtonTypeCustom];
         [noBtn setBackgroundColor:[UIColor clearColor]];
-        [noBtn setFrame:CGRectMake(DEVICEWIDTH/5, 18, DEVICEWIDTH/5, DEVICEWIDTH/5)];
+        [noBtn setFrame:CGRectMake(DEVICEWIDTH/5, 18, DEVICEWIDTH/5*sizeRatio, DEVICEWIDTH/5*sizeRatio)];
         [noBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
         [noBtn.titleLabel setFont:[UIFont fontWithName:@"GillSans-Light" size:16]];
         [noBtn setTitle:@"No" forState:UIControlStateNormal];
@@ -80,25 +82,34 @@
         [promptView addSubview:noBtn];
         [promptView setAlpha:0];
         
-        instructions = [[UILabel alloc] initWithFrame:CGRectMake(20, 10, DEVICEWIDTH-40, 80)];
-        [instructions setBackgroundColor:[UIColor clearColor]];
-        [instructions setTextAlignment:NSTextAlignmentCenter];
-        instructions.adjustsFontSizeToFitWidth = YES;
-        [instructions setText:@"Enter a city or zipcode..."];
-        
-        [instructions setTextColor:[UIColor whiteColor]];
-        [instructions setFont:[UIFont fontWithName:@"GillSans-Light" size:30]];
         [self addSubview:instructions];
         self.shown = FALSE;
     }
     return self;
 }
 
+
+-(void)reset
+{
+    
+    [instructions setText:@"Enter a city or zipcode..."];
+    
+    [input setText:@""];
+    [input becomeFirstResponder];
+    [input setAlpha:0];
+    
+    [promptView removeFromSuperview]; //?
+    [promptView setAlpha:0];
+    
+    [cityPicker removeFromSuperview];
+    
+}
+
+
 -(void)animateInputBar{
     
     [UIView animateWithDuration:0.2 delay:0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
         [input setAlpha:1.0];
-        [resign setAlpha:1.0];
         
     } completion:^(BOOL finished) {
 
@@ -107,6 +118,10 @@
 
 -(BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string
 {
+    if ([textField.text isEqualToString:@"Too much for the TWAP!!!"]) {
+        return NO;
+    }
+    
     return YES;
 }
 
@@ -160,6 +175,7 @@
 -(void)noBtnPressed
 {
     [promptView removeFromSuperview];
+    [promptView setAlpha:0];
     [instructions setText:@"Enter a city or zipcode..."];
     [input setText:@""];
     place = nil;
@@ -178,8 +194,8 @@
         [instructions setText:@"Choose a location to delete..."];
         [input setText:@"Too much for the TWAP!!!"];
         
-        UISegmentedControl *cityPicker = [[UISegmentedControl alloc] initWithItems:cities];
-        [cityPicker setFrame:CGRectMake(20, promptView.frame.origin.y+30, DEVICEWIDTH-40, 40)];
+        cityPicker = [[UISegmentedControl alloc] initWithItems:cities];
+        [cityPicker setFrame:CGRectMake(20, promptView.frame.origin.y+30, DEVICEWIDTH-40, 50)];
         [cityPicker setBackgroundColor:MAINCOLOR];
         [cityPicker setTintColor:[UIColor whiteColor]];
         [cityPicker setAlpha:0.9];
@@ -188,9 +204,11 @@
         [cityPicker setTitleTextAttributes:attributes forState:UIControlStateNormal];
         [cityPicker addTarget:self action:@selector(pickerChanged:) forControlEvents:UIControlEventValueChanged];
         [cityPicker.layer setCornerRadius:0];
-        //[cityPicker.layer setBorderColor:[UIColor whiteColor].CGColor];
-        //[cityPicker.layer setBorderWidth:1.0];
-        [self addSubview:cityPicker];
+        [cityPicker.layer setBorderColor:[UIColor whiteColor].CGColor];
+        [cityPicker.layer setBorderWidth:0.5];        [self addSubview:cityPicker];
+        [UIView animateWithDuration:0.4 delay:0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+            [cityPicker setAlpha:0.9];
+        } completion:nil];
     }
     else{
         [input resignFirstResponder];
@@ -221,6 +239,7 @@
     }
     else if([title isEqualToString:@"NO"])
     {
+        
         return;
     }
 }
@@ -253,8 +272,10 @@
         [self setAlpha:0.0];
     }];
     [self removeFromSuperview];
+    [input setAlpha:0];
     self.shown = FALSE;
     place = nil;
+    [self reset];
 }
 
 

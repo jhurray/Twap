@@ -53,7 +53,8 @@
         //pic
         pic = [[UIImageView alloc] initWithFrame:CGRectMake(10, TV_HEIGHT-45, 35, 35)];
         [pic setBackgroundColor:[UIColor whiteColor]];
-        [pic.layer setCornerRadius:7];
+        [pic.layer setCornerRadius:8];
+        pic.layer.masksToBounds = TRUE;
         
         //name
         name = [[UILabel alloc] initWithFrame:CGRectMake(55, TV_HEIGHT-45, 105, 35)];
@@ -91,8 +92,24 @@
         [self addSubview:text];
         [self addSubview:pic];
         
+        UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTapGesture:)];
+        [self addGestureRecognizer:tap];
+        
+        //[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"twitter://status?id=12345"]];
+
+        
     }
     return self;
+}
+
+
+-(void)handleTapGesture:(id)sender
+{
+    if(self.tweet)
+    {
+        NSString *urlString = [NSString stringWithFormat:@"twitter://status?id=%@", self.tweet.id_str];
+        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:urlString]];
+    }
 }
 
 -(UIImage *)changeImage:(UIImage *)img toColor:(UIColor *)clr{
@@ -190,6 +207,7 @@
 
 -(void)setNewTweet:(Tweet *)tweet{
     [self hasBeenUnfavorited];
+    self.tweet = tweet;
     id_str = tweet.id_str;
     pic.image = tweet.image;
     [text setText:tweet.text];

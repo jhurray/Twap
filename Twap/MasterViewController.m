@@ -17,7 +17,7 @@
 @implementation MasterViewController
 
 @synthesize pageController, viewControllers, currentMapController;
-@synthesize fadeView, navBarTitle, cities, addRegion;
+@synthesize fadeView, navBarTitle, cities, addRegion, userIsNew;
 
 
 -(id)initWithCities:(NSArray *)cityArray
@@ -26,18 +26,15 @@
     if (self) {
         // Custom initialization
         
-        //start location manager
-        [[LocationGetter sharedInstance] startUpdates];
-        
         viewControllers = [NSMutableArray array];
-        
         
         CLLocationCoordinate2D zoomLocation;
         zoomLocation.latitude = [[LocationGetter sharedInstance] getLatitude];
         zoomLocation.longitude = [[LocationGetter sharedInstance] getLongitude];
         
         MKCoordinateRegion viewRegion = MKCoordinateRegionMakeWithDistance(zoomLocation, 1.5*MILES*METERS_PER_MILE,1.5*MILES*METERS_PER_MILE);
-        MapRegionViewController *currentLocationMapRegion = [[MapRegionViewController alloc] initWithMapRegion:viewRegion];
+        MapRegionViewController *currentLocationMapRegion;
+        currentLocationMapRegion = [[MapRegionViewController alloc] initWithMapRegion:viewRegion andMaster:self];
         currentLocationMapRegion.cityName = @"Current Location";
         currentLocationMapRegion.index = [viewControllers count];
         [self.viewControllers addObject:currentLocationMapRegion];
@@ -49,34 +46,101 @@
     return self;
 }
 
--(NSArray *)askForCities
+- (void)viewDidLoad
 {
-    return cities;
+    [super viewDidLoad];
+    
+    navBarTitle = [[UILabel alloc] initWithFrame:CGRectMake(40, 0, DEVICEWIDTH-80, 44)];
+    navBarTitle.backgroundColor = [UIColor clearColor];
+    navBarTitle.textAlignment = NSTextAlignmentCenter;
+    navBarTitle.textColor = [UIColor whiteColor];
+    navBarTitle.font = [UIFont fontWithName:@"GillSans-Light" size:24];
+    navBarTitle.text = @"Current Location";
+    [self.navigationItem setTitleView:navBarTitle];
+    
+    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(refreshCurrentView)];
+    [self.navigationItem.leftBarButtonItem setTintColor:[UIColor whiteColor]];
+    
+    //self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addRegionToPages)];
+    //[self.navigationItem.rightBarButtonItem setTintColor:[UIColor whiteColor]];
+    UIButton *btn = [UIButton buttonWithType:UIButtonTypeContactAdd];
+    [btn setBackgroundColor:[UIColor clearColor]];
+    [btn setTintColor:[UIColor whiteColor]];
+    [btn setFrame:BARBUTTONFRAME];
+    [btn addTarget:self action:@selector(addRegionToPages) forControlEvents:UIControlEventTouchUpInside];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:btn];
+    
+    UIView *navCover = [[UIView alloc] initWithFrame:CGRectMake(0, 0, DEVICEWIDTH, 44)];
+    [navCover setAlpha:0.8];
+    [navCover setBackgroundColor:[UIColor blueColor]];
+    [self.view addSubview:navCover];
+    
+    UIView *backgroundSheet = [[UIView alloc] initWithFrame:self.view.frame];
+    [backgroundSheet setBackgroundColor:MAINCOLOR];
+    [backgroundSheet setAlpha:0.7];
+    UILabel *twap = [[UILabel alloc] initWithFrame:CGRectMake(0, DEVICEHEIGHT/2-150, DEVICEWIDTH, 200)];
+    [twap setText:@"Twap"];
+    [twap setTextAlignment:NSTextAlignmentCenter];
+    [twap setTextColor:[UIColor whiteColor]];
+    [twap setFont:[UIFont fontWithName:@"GillSans-Light" size:45]];
+    [backgroundSheet addSubview:twap];
+    [self.view addSubview:backgroundSheet];
+    
+    [self.view sendSubviewToBack:backgroundSheet];
+    [self.navigationController setNavigationBarHidden:YES animated:NO];
+    [self.navigationController.navigationBar setBarStyle:UIBarStyleBlackTranslucent];
+    
+    //adding the page view controller
+    pageController = [[UIPageViewController alloc ] initWithTransitionStyle:UIPageViewControllerTransitionStyleScroll navigationOrientation:UIPageViewControllerNavigationOrientationHorizontal options:nil];
+    pageController.delegate = self;
+    [pageController setDataSource:self];
+    [pageController setTransitioningDelegate:self];
+    [pageController.view setFrame:CGRectMake(0, 0, DEVICEWIDTH, DEVICEHEIGHT+PAGEVIEWOFFSET)];
+    NSArray *vcs = [NSArray arrayWithObject:viewControllers[0]];
+    [pageController setViewControllers:vcs direction:UIPageViewControllerNavigationDirectionForward animated:YES completion:^(BOOL finished) {
+        //any completion code???
+    }];
+    
+    [self addChildViewController:pageController];
+    [self.view addSubview:pageController.view];
+    [pageController didMoveToParentViewController:self];
+    
+    fadeView = [[UIView alloc] initWithFrame:self.view.frame];
+    [fadeView setBackgroundColor:MAINCOLOR];
+    
+    UILabel *getTwapping = [[UILabel alloc] initWithFrame:CGRectMake(0, DEVICEHEIGHT/2-100, 320, 200)];
+    [getTwapping setText:@"Get Ready..."];
+    [getTwapping setTextColor:[UIColor whiteColor]];
+    [getTwapping setTextAlignment:NSTextAlignmentCenter];
+    [getTwapping setFont:[UIFont fontWithName:@"GillSans-Light" size:45]];
+    [fadeView addSubview:getTwapping];
+    [self.view addSubview:fadeView];
+	// Do any additional setup after loading the view.
+    [self countdownAnimation:getTwapping];
+    [self performSelector:@selector(loadUpMapViews) withObject:self afterDelay:5];
 }
 
--(void)addRegionWithCoordinate:(CLLocationCoordinate2D)coord andText:(NSString *)text andReplacement:(NSUInteger)index{
-    
-    MKCoordinateRegion viewRegion = MKCoordinateRegionMakeWithDistance(coord, 1.5*MILES*METERS_PER_MILE,1.5*MILES*METERS_PER_MILE);
-    MapRegionViewController *currentLocationMapRegion = [[MapRegionViewController alloc] initWithMapRegion:viewRegion];
-    NSLog(@"%@", cities);
-    if(cities.count == CITYLIMIT){
-        [cities removeObject:[cities objectAtIndex:index]];
-        [viewControllers removeObject:[viewControllers objectAtIndex:index+1]];
-        NSLog(@"Citys = %ui, vcs = %ui", (unsigned int)cities.count, (unsigned int)viewControllers.count);
-        assert(cities.count == viewControllers.count-1);
-        for (int i = 0; i < CITYLIMIT; ++i) {
-            ((MapRegionViewController *)[viewControllers objectAtIndex:i]).index = i;
-        }
-    }
-    currentLocationMapRegion.cityName = text;
-    [cities addObject:text];
-    currentLocationMapRegion.index = [viewControllers count];
-    [viewControllers addObject:currentLocationMapRegion];
-    
-    __block UILabel *blockNavTitle = navBarTitle;
-    [pageController setViewControllers:[NSArray arrayWithObject:currentLocationMapRegion] direction:UIPageViewControllerNavigationDirectionForward animated:YES completion:^(BOOL finished) {
-        [blockNavTitle setText:text];
+-(void)promptNewUser
+{
+    NewUserPromptView *prompt = [[NewUserPromptView alloc] initWithFrame:self.view.frame];
+    [prompt setDelegate:self];
+    [UIView animateWithDuration:0.5 delay:0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+        [self.view addSubview:prompt];
+    } completion:nil];
+    [navBarTitle setText:@"How to TWAP"];
+    userIsNew = FALSE;
+}
+
+-(void)finishedTutorial
+{
+    MapRegionViewController *currLocVC = viewControllers[0];
+    [pageController setViewControllers:[NSArray arrayWithObject:currLocVC] direction:UIPageViewControllerNavigationDirectionForward animated:NO completion:^(BOOL finished) {
+        
     }];
+    [currLocVC reloadMap];
+    [navBarTitle setText:currLocVC.cityName];
+    [self removeFadeView];
+
     
 }
 
@@ -93,7 +157,7 @@
             NSLog(@"lat and long are %f, %f", lat, lng);
             
             MKCoordinateRegion viewRegion = MKCoordinateRegionMakeWithDistance(CLLocationCoordinate2DMake(lat, lng), 1.5*MILES*METERS_PER_MILE,1.5*MILES*METERS_PER_MILE);
-            MapRegionViewController *currentLocationMapRegion = [[MapRegionViewController alloc] initWithMapRegion:viewRegion];
+            MapRegionViewController *currentLocationMapRegion = [[MapRegionViewController alloc] initWithMapRegion:viewRegion andMaster:nil];
             currentLocationMapRegion.cityName = cities[viewControllers.count-1]
             ;
             currentLocationMapRegion.index = [viewControllers count];
@@ -153,12 +217,35 @@ static NSTimer *timer;
                        
 -(void)addRegionToPages{
     
-    if(addRegion.shown)return;
+    CABasicAnimation *rotate = [CABasicAnimation animationWithKeyPath:@"transform.rotation.z"];
+    [rotate setRemovedOnCompletion:NO];
+    [rotate setFillMode:kCAFillModeForwards];
     
-    addRegion = [[AddRegionView alloc] initWithFrame:CGRectMake(0, 64, DEVICEWIDTH, DEVICEHEIGHT-64-KEYBOARDHEIGHT)];
+    if (!addRegion) {
+        addRegion = [[AddRegionView alloc] initWithFrame:CGRectMake(0, 64, DEVICEWIDTH, DEVICEHEIGHT-64-KEYBOARDHEIGHT)];
+    }
+    
+    if(addRegion.shown)
+    {
+        [rotate setFromValue:[NSNumber numberWithFloat:-M_PI/4]];
+        [rotate setToValue:[NSNumber numberWithFloat:0]];
+        [rotate setDuration:0.6];
+        [self.navigationItem.rightBarButtonItem.customView.layer addAnimation:rotate forKey:@"toAddRotation"];
+        [addRegion cancel];
+        return;
+    }
+    
+    [rotate setFromValue:[NSNumber numberWithFloat:0]];
+    [rotate setToValue:[NSNumber numberWithFloat:-M_PI/4]];
+    [rotate setDuration:0.6];
+    [self.navigationItem.rightBarButtonItem.customView.layer addAnimation:rotate forKey:@"toCancelRotation"];
+    
     addRegion.delegate = self;
     addRegion.shown = TRUE;
+    [addRegion.input setSelected:YES];
+    [addRegion.input becomeFirstResponder];
     [addRegion setAlpha:0.0];
+    [addRegion.input setText:@""];
     [self.view addSubview:addRegion];
     [UIView animateWithDuration:0.5 delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
         [addRegion setAlpha:0.9];
@@ -169,72 +256,48 @@ static NSTimer *timer;
     
 }
 
-- (void)viewDidLoad
+
+-(NSArray *)askForCities
 {
-    [super viewDidLoad];
+    return cities;
+}
+
+-(void)addRegionWithCoordinate:(CLLocationCoordinate2D)coord andText:(NSString *)text andReplacement:(NSUInteger)index{
     
-    navBarTitle = [[UILabel alloc] initWithFrame:CGRectMake(40, 0, DEVICEWIDTH-80, 44)];
-    navBarTitle.backgroundColor = [UIColor clearColor];
-    navBarTitle.textAlignment = NSTextAlignmentCenter;
-    navBarTitle.textColor = [UIColor whiteColor];
-    navBarTitle.font = [UIFont fontWithName:@"GillSans-Light" size:24];
-    navBarTitle.text = @"Current Location";
-    [self.navigationItem setTitleView:navBarTitle];
+    CABasicAnimation *rotate = [CABasicAnimation animationWithKeyPath:@"transform.rotation.z"];
+    [rotate setRemovedOnCompletion:NO];
+    [rotate setFillMode:kCAFillModeForwards];
     
-    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(refreshCurrentView)];
-    [self.navigationItem.leftBarButtonItem setTintColor:[UIColor whiteColor]];
+    [rotate setFromValue:[NSNumber numberWithFloat:-M_PI/4]];
+    [rotate setToValue:[NSNumber numberWithFloat:0]];
+    [rotate setDuration:0.6];
+    [self.navigationItem.rightBarButtonItem.customView.layer addAnimation:rotate forKey:@"toAddRotation"];
     
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addRegionToPages)];
-    [self.navigationItem.rightBarButtonItem setTintColor:[UIColor whiteColor]];
+    MKCoordinateRegion viewRegion = MKCoordinateRegionMakeWithDistance(coord, 1.5*MILES*METERS_PER_MILE,1.5*MILES*METERS_PER_MILE);
+    MapRegionViewController *currentLocationMapRegion = [[MapRegionViewController alloc] initWithMapRegion:viewRegion andMaster:nil];
+    NSLog(@"%@", cities);
+    if(cities.count == CITYLIMIT){
+        [cities removeObject:[cities objectAtIndex:index]];
+        [viewControllers removeObject:[viewControllers objectAtIndex:index+1]];
+        NSLog(@"Citys = %ui, vcs = %ui", (unsigned int)cities.count, (unsigned int)viewControllers.count);
+        assert(cities.count == viewControllers.count-1);
+        for (int i = 0; i < CITYLIMIT; ++i) {
+            ((MapRegionViewController *)[viewControllers objectAtIndex:i]).index = i;
+        }
+    }
+    currentLocationMapRegion.cityName = text;
+    [cities addObject:text];
+    currentLocationMapRegion.index = [viewControllers count];
+    [viewControllers addObject:currentLocationMapRegion];
     
-    UIView *navCover = [[UIView alloc] initWithFrame:CGRectMake(0, 0, DEVICEWIDTH, 44)];
-    [navCover setAlpha:0.8];
-    [navCover setBackgroundColor:[UIColor blueColor]];
-    [self.view addSubview:navCover];
-    
-    UIView *backgroundSheet = [[UIView alloc] initWithFrame:self.view.frame];
-    [backgroundSheet setBackgroundColor:MAINCOLOR];
-    [backgroundSheet setAlpha:0.7];
-    UILabel *twap = [[UILabel alloc] initWithFrame:CGRectMake(0, DEVICEHEIGHT/2-150, DEVICEWIDTH, 200)];
-    [twap setText:@"Twap"];
-    [twap setTextAlignment:NSTextAlignmentCenter];
-    [twap setTextColor:[UIColor whiteColor]];
-    [twap setFont:[UIFont fontWithName:@"GillSans-Light" size:45]];
-    [backgroundSheet addSubview:twap];
-    [self.view addSubview:backgroundSheet];
-    
-    [self.view sendSubviewToBack:backgroundSheet];
-    [self.navigationController setNavigationBarHidden:YES animated:NO];
-    [self.navigationController.navigationBar setBarStyle:UIBarStyleBlackTranslucent];
-    
-    //adding the page view controller
-    pageController = [[UIPageViewController alloc ] initWithTransitionStyle:UIPageViewControllerTransitionStyleScroll navigationOrientation:UIPageViewControllerNavigationOrientationHorizontal options:nil];
-    pageController.delegate = self;
-    [pageController setDataSource:self];
-    [pageController.view setFrame:CGRectMake(0, 0, DEVICEWIDTH, DEVICEHEIGHT+PAGEVIEWOFFSET)];
-    NSArray *vcs = [NSArray arrayWithObject:viewControllers[0]];
-    [pageController setViewControllers:vcs direction:UIPageViewControllerNavigationDirectionForward animated:YES completion:^(BOOL finished) {
-        //any completion code???
+    __block UILabel *blockNavTitle = navBarTitle;
+    [pageController setViewControllers:[NSArray arrayWithObject:currentLocationMapRegion] direction:UIPageViewControllerNavigationDirectionForward animated:YES completion:^(BOOL finished) {
+        [blockNavTitle setText:text];
     }];
     
-    [self addChildViewController:pageController];
-    [self.view addSubview:pageController.view];
-    [pageController didMoveToParentViewController:self];
-    
-    fadeView = [[UIView alloc] initWithFrame:self.view.frame];
-    [fadeView setBackgroundColor:MAINCOLOR];
-    
-    UILabel *getTwapping = [[UILabel alloc] initWithFrame:CGRectMake(0, DEVICEHEIGHT/2-100, 320, 200)];
-    [getTwapping setText:@"Get Ready..."];
-    [getTwapping setTextColor:[UIColor whiteColor]];
-    [getTwapping setTextAlignment:NSTextAlignmentCenter];
-    [getTwapping setFont:[UIFont fontWithName:@"GillSans-Light" size:45]];
-    [fadeView addSubview:getTwapping];
-    [self.view addSubview:fadeView];
-	// Do any additional setup after loading the view.
-    [self countdownAnimation:getTwapping];
-    [self performSelector:@selector(loadUpMapViews) withObject:self afterDelay:5];
 }
+
+
 
 -(void)countdownAnimation:(UILabel *)label{
     [label setAlpha:1.0];
@@ -257,7 +320,12 @@ static NSTimer *timer;
                     
                 } completion:^(BOOL finished){
                     NSLog(@"Done with animation");
-                    
+                    if(userIsNew)
+                    {
+                        [self promptNewUser];
+                    }
+                    // should take care of fuck ups 
+                    [self performSelector:@selector(removeFadeView) withObject:self afterDelay:3];
                 }];
             }];
         }];
@@ -285,7 +353,7 @@ static NSTimer *timer;
     __weak MasterViewController *me = self;
     NSArray *vcs = [NSArray arrayWithObject:viewControllers[0]];
     [pageController setViewControllers:vcs direction:UIPageViewControllerNavigationDirectionForward animated:YES completion:^(BOOL finished) {
-        [me performSelector:@selector(removeFadeView) withObject:me afterDelay:2.0];
+        [me performSelector:@selector(removeFadeView) withObject:nil afterDelay:2.0];
     }];
     
     //[self removeFadeView];
@@ -293,6 +361,11 @@ static NSTimer *timer;
 
 
 -(void)removeFadeView{
+    
+    if(![self.view.subviews containsObject:fadeView]){
+        return;
+    }
+    
     [UIView animateWithDuration:0.8 delay:0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
         [fadeView setAlpha:0];
         [self.navigationController setNavigationBarHidden:NO animated:YES];

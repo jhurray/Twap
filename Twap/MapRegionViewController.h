@@ -9,9 +9,11 @@
 #import <UIKit/UIKit.h>
 #import "TweetView.h"
 #import "AnimatedOverlay.h"
+#import "NewUserPromptView.h"
 
 @interface MapRegionViewController : UIViewController<MKMapViewDelegate>
 
+@property (nonatomic, weak) id master;
 @property (assign, nonatomic) NSInteger index;
 @property (nonatomic, strong) MKMapView *map;
 @property (nonatomic, strong) NSMutableDictionary *tweetsDictionary;
@@ -23,10 +25,11 @@
 @property double mapDist;
 @property NSUInteger annotationCount;
 
--(id) initWithMapRegion:(MKCoordinateRegion)coordRegion;
+-(id) initWithMapRegion:(MKCoordinateRegion)coordRegion andMaster:(id)master;
 -(void) refreshTweets;
 -(void)removeAnimatedOverlay;
 -(void) startRefreshTimer;
 -(void)stopTimer;
+-(void)reloadMap;
 
 @end

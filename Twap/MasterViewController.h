@@ -9,7 +9,7 @@
 #import "MapRegionViewController.h"
 #import <UIKit/UIKit.h>
 
-@interface MasterViewController : UIViewController <UIPageViewControllerDataSource, TwitterDataDelegate, UIPageViewControllerDelegate, AddRegionDelegate>
+@interface MasterViewController : UIViewController <UIPageViewControllerDataSource, TwitterDataDelegate, UIPageViewControllerDelegate, AddRegionDelegate, NewUserDelegate, UIViewControllerTransitioningDelegate>
 
 @property (nonatomic, strong) UIPageViewController *pageController;
 @property (nonatomic, strong) NSMutableArray *viewControllers;
@@ -18,7 +18,8 @@
 @property (nonatomic, strong) UILabel *navBarTitle;
 @property (nonatomic, strong) NSMutableArray *cities;
 @property (nonatomic, strong) AddRegionView *addRegion;
+@property BOOL userIsNew;
 
 -(id)initWithCities:(NSArray *)cityArray;
-
+-(void)promptNewUser;
 @end

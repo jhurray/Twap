@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		38070134188F00AB00C0DCB7 /* Tweet.m in Sources */ = {isa = PBXBuildFile; fileRef = 38070131188F00AB00C0DCB7 /* Tweet.m */; };
 		38070135188F00AB00C0DCB7 /* TwitterDeveloper.m in Sources */ = {isa = PBXBuildFile; fileRef = 38070133188F00AB00C0DCB7 /* TwitterDeveloper.m */; };
+		383EC79218BEE81800DED008 /* NewUserPromptView.m in Sources */ = {isa = PBXBuildFile; fileRef = 383EC79118BEE81800DED008 /* NewUserPromptView.m */; };
 		38FE1314188AF58700DC6F62 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 38FE1313188AF58700DC6F62 /* Foundation.framework */; };
 		38FE1316188AF58700DC6F62 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 38FE1315188AF58700DC6F62 /* CoreGraphics.framework */; };
 		38FE1318188AF58700DC6F62 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 38FE1317188AF58700DC6F62 /* UIKit.framework */; };
@@ -53,6 +54,8 @@
 		38070131188F00AB00C0DCB7 /* Tweet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Tweet.m; sourceTree = "<group>"; };
 		38070132188F00AB00C0DCB7 /* TwitterDeveloper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TwitterDeveloper.h; sourceTree = "<group>"; };
 		38070133188F00AB00C0DCB7 /* TwitterDeveloper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TwitterDeveloper.m; sourceTree = "<group>"; };
+		383EC79018BEE81800DED008 /* NewUserPromptView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NewUserPromptView.h; sourceTree = "<group>"; };
+		383EC79118BEE81800DED008 /* NewUserPromptView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NewUserPromptView.m; sourceTree = "<group>"; };
 		38FE1310188AF58700DC6F62 /* Twap.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Twap.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		38FE1313188AF58700DC6F62 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		38FE1315188AF58700DC6F62 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -228,6 +231,8 @@
 				38FE136C188B9CF200DC6F62 /* TweetView.m */,
 				38FE1379188BF64200DC6F62 /* AddRegionView.h */,
 				38FE137A188BF64200DC6F62 /* AddRegionView.m */,
+				383EC79018BEE81800DED008 /* NewUserPromptView.h */,
+				383EC79118BEE81800DED008 /* NewUserPromptView.m */,
 			);
 			name = Objects;
 			sourceTree = "<group>";
@@ -352,6 +357,7 @@
 				38FE1324188AF58700DC6F62 /* AppDelegate.m in Sources */,
 				38070135188F00AB00C0DCB7 /* TwitterDeveloper.m in Sources */,
 				38FE1347188AF7FC00DC6F62 /* MapRegionViewController.m in Sources */,
+				383EC79218BEE81800DED008 /* NewUserPromptView.m in Sources */,
 				38FE1320188AF58700DC6F62 /* main.m in Sources */,
 				38FE1355188AFDCB00DC6F62 /* TwitterDataHandler.m in Sources */,
 				38FE1358188B053B00DC6F62 /* LocationGetter.m in Sources */,

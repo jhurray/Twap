@@ -7,6 +7,7 @@
 //
 
 #import "MapRegionViewController.h"
+#import "MasterViewController.h"
 
 @interface MapRegionViewController ()
 
@@ -69,9 +70,10 @@
     timer = [NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(performFade) userInfo:nil repeats:YES];
 }
 
--(id)initWithMapRegion:(MKCoordinateRegion)coordRegion{
+-(id)initWithMapRegion:(MKCoordinateRegion)coordRegion andMaster:(id)master{
     
     if(self = [super initWithNibName:nil bundle:nil]){
+        self.master = master;
         map = [[MKMapView alloc] initWithFrame:CGRectMake(0, 64, DEVICEWIDTH, DEVICEHEIGHT-64-TV_HEIGHT)];
         [map setScrollEnabled:NO];
         [map setRotateEnabled:NO];
@@ -206,6 +208,20 @@ static AnimatedOverlay *animatedOverlay;
     //[self refreshTweets];
 	// Do any additional setup after loading the view.
     
+    if(!map.centerCoordinate.latitude && !map.centerCoordinate.longitude )
+    {
+        // this will be called for the current location for a new user.. good place to prompt a new user
+        ((MasterViewController *)self.master).userIsNew = TRUE;
+        
+        [self performSelector:@selector(reloadMap) withObject:self afterDelay:3.5];
+    }
+    
+}
+
+-(void)reloadMap
+{
+    map.region = MKCoordinateRegionMakeWithDistance([[LocationGetter sharedInstance]getCoord], 1.5*METERS_PER_MILE*MILES, 1.5*METERS_PER_MILE*MILES);
+    [self refreshTweets];
 }
 
 - (void)didReceiveMemoryWarning
