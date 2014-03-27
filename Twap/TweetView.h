@@ -21,6 +21,8 @@
 @property (nonatomic, strong) UIButton *retweet;
 @property (nonatomic, strong) UIButton *favorite;
 @property (nonatomic, strong) Tweet *tweet;
+@property (nonatomic, strong) NSMutableArray *favoriteIds;
+@property (nonatomic, strong) NSMutableArray *retweetIds;
 
 @property BOOL favorited;
 

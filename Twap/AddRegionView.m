@@ -39,6 +39,7 @@
         [input setFont:[UIFont fontWithName:@"GillSans-Light" size:24]];
         [input setTextAlignment:NSTextAlignmentCenter];
         [input becomeFirstResponder];
+        [input setKeyboardAppearance:UIKeyboardAppearanceLight];
         [input setReturnKeyType:UIReturnKeySearch];
         input.delegate = self;
         [input setAlpha:0];
@@ -205,7 +206,9 @@
         [cityPicker addTarget:self action:@selector(pickerChanged:) forControlEvents:UIControlEventValueChanged];
         [cityPicker.layer setCornerRadius:0];
         [cityPicker.layer setBorderColor:[UIColor whiteColor].CGColor];
-        [cityPicker.layer setBorderWidth:0.5];        [self addSubview:cityPicker];
+        [cityPicker.layer setBorderWidth:0.8];
+        [cityPicker.layer setCornerRadius:2];
+        [self addSubview:cityPicker];
         [UIView animateWithDuration:0.4 delay:0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
             [cityPicker setAlpha:0.9];
         } completion:nil];

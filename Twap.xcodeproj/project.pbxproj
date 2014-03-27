@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		26D89EC318E4C77200A6EC59 /* addBtn.png in Resources */ = {isa = PBXBuildFile; fileRef = 26D89EC218E4C77200A6EC59 /* addBtn.png */; };
+		26D89EC518E4C98A00A6EC59 /* add2.png in Resources */ = {isa = PBXBuildFile; fileRef = 26D89EC418E4C98A00A6EC59 /* add2.png */; };
+		26D89EC718E4C9E800A6EC59 /* addButton.png in Resources */ = {isa = PBXBuildFile; fileRef = 26D89EC618E4C9E800A6EC59 /* addButton.png */; };
 		38070134188F00AB00C0DCB7 /* Tweet.m in Sources */ = {isa = PBXBuildFile; fileRef = 38070131188F00AB00C0DCB7 /* Tweet.m */; };
 		38070135188F00AB00C0DCB7 /* TwitterDeveloper.m in Sources */ = {isa = PBXBuildFile; fileRef = 38070133188F00AB00C0DCB7 /* TwitterDeveloper.m */; };
 		383EC79218BEE81800DED008 /* NewUserPromptView.m in Sources */ = {isa = PBXBuildFile; fileRef = 383EC79118BEE81800DED008 /* NewUserPromptView.m */; };
@@ -50,6 +53,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		26D89EC218E4C77200A6EC59 /* addBtn.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = addBtn.png; sourceTree = "<group>"; };
+		26D89EC418E4C98A00A6EC59 /* add2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = add2.png; sourceTree = "<group>"; };
+		26D89EC618E4C9E800A6EC59 /* addButton.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = addButton.png; sourceTree = "<group>"; };
 		38070130188F00AB00C0DCB7 /* Tweet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Tweet.h; sourceTree = "<group>"; };
 		38070131188F00AB00C0DCB7 /* Tweet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Tweet.m; sourceTree = "<group>"; };
 		38070132188F00AB00C0DCB7 /* TwitterDeveloper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TwitterDeveloper.h; sourceTree = "<group>"; };
@@ -166,6 +172,9 @@
 			children = (
 				38FE137C188EFE6C00DC6F62 /* bird.png */,
 				38FE1377188BC09F00DC6F62 /* circle.png */,
+				26D89EC418E4C98A00A6EC59 /* add2.png */,
+				26D89EC618E4C9E800A6EC59 /* addButton.png */,
+				26D89EC218E4C77200A6EC59 /* addBtn.png */,
 				38FE136E188BA2FF00DC6F62 /* favorite.png */,
 				38FE1370188BA30700DC6F62 /* retweet.png */,
 				38FE1322188AF58700DC6F62 /* AppDelegate.h */,
@@ -294,9 +303,12 @@
 		38FE1308188AF58700DC6F62 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0500;
+				LastUpgradeCheck = 0510;
 				ORGANIZATIONNAME = jhurrayApps;
 				TargetAttributes = {
+					38FE130F188AF58700DC6F62 = {
+						DevelopmentTeam = 43LEM8BQ2H;
+					};
 					38FE132A188AF58700DC6F62 = {
 						TestTargetID = 38FE130F188AF58700DC6F62;
 					};
@@ -327,9 +339,12 @@
 			files = (
 				38FE131E188AF58700DC6F62 /* InfoPlist.strings in Resources */,
 				38FE1326188AF58700DC6F62 /* Images.xcassets in Resources */,
+				26D89EC318E4C77200A6EC59 /* addBtn.png in Resources */,
 				38FE136F188BA2FF00DC6F62 /* favorite.png in Resources */,
 				38FE137D188EFE6F00DC6F62 /* bird.png in Resources */,
+				26D89EC718E4C9E800A6EC59 /* addButton.png in Resources */,
 				38FE1378188BC09F00DC6F62 /* circle.png in Resources */,
+				26D89EC518E4C98A00A6EC59 /* add2.png in Resources */,
 				38FE1371188BA30700DC6F62 /* retweet.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -406,7 +421,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
@@ -445,7 +459,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
@@ -479,6 +492,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Twap/Twap-Prefix.pch";
 				INFOPLIST_FILE = "Twap/Twap-Info.plist";
@@ -487,6 +502,7 @@
 					"$(SDKROOT)/usr/lib/system/introspection",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -496,6 +512,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Twap/Twap-Prefix.pch";
 				INFOPLIST_FILE = "Twap/Twap-Info.plist";
@@ -504,6 +522,7 @@
 					"$(SDKROOT)/usr/lib/system/introspection",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
@@ -511,7 +530,6 @@
 		38FE1340188AF58700DC6F62 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Twap.app/Twap";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
@@ -534,7 +552,6 @@
 		38FE1341188AF58700DC6F62 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Twap.app/Twap";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",

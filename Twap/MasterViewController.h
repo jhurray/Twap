@@ -18,6 +18,7 @@
 @property (nonatomic, strong) UILabel *navBarTitle;
 @property (nonatomic, strong) NSMutableArray *cities;
 @property (nonatomic, strong) AddRegionView *addRegion;
+@property (nonatomic, strong) UILabel *getTwapping;
 @property BOOL userIsNew;
 
 -(id)initWithCities:(NSArray *)cityArray;

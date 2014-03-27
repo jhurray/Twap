@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>D3A26D0E-34EB-4FF0-8118-8DCE57BD5F91</string>
+	<key>IDESourceControlProjectName</key>
+	<string>Twap</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>4CB7CB33-052F-4177-BD2C-4B5EDDFFA238</key>
+		<string>ssh://github.com/jhurray/Twap.git</string>
+		<key>5AC00C88-7026-46B2-BC6C-1F43315D2F72</key>
+		<string>https://github.com/jpstern/SoapBox.git</string>
+		<key>C14C12C1-4AFE-45B4-8768-B71DDCFED8A3</key>
+		<string>https://github.com/jhurray/iOS7AnimatedMapOverlay.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>Twap.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>4CB7CB33-052F-4177-BD2C-4B5EDDFFA238</key>
+		<string>../..</string>
+		<key>5AC00C88-7026-46B2-BC6C-1F43315D2F72</key>
+		<string>../../../SoapBox</string>
+		<key>C14C12C1-4AFE-45B4-8768-B71DDCFED8A3</key>
+		<string>../../../iOS7AnimatedMapOverlay</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>ssh://github.com/jhurray/Twap.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>4CB7CB33-052F-4177-BD2C-4B5EDDFFA238</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>C14C12C1-4AFE-45B4-8768-B71DDCFED8A3</string>
+			<key>IDESourceControlWCCName</key>
+			<string>iOS7AnimatedMapOverlay</string>
+		</dict>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>5AC00C88-7026-46B2-BC6C-1F43315D2F72</string>
+			<key>IDESourceControlWCCName</key>
+			<string>SoapBox</string>
+		</dict>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>4CB7CB33-052F-4177-BD2C-4B5EDDFFA238</string>
+			<key>IDESourceControlWCCName</key>
+			<string>Twap</string>
+		</dict>
+	</array>
+</dict>
+</plist>

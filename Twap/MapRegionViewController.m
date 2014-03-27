@@ -33,48 +33,11 @@
 }
 
 
--(void)performFade{
-    
-    if ([map.annotations count] == 0) {
-        Tweet *blankTweet = [[Tweet alloc] init];
-        blankTweet.text = @"No recent tweets for this area :(";
-        blankTweet.favorited = NO;
-        blankTweet.retweeted = NO;
-        [tweetView fadeOutWithNewTweet:blankTweet];
-        return;
-    }
-    if (self.annotationCount == map.annotations.count) {
-        self.annotationCount = 0;
-    }
-    Tweet *tweet = (Tweet *)[map.annotations objectAtIndex:self.annotationCount];
-    self.annotationCount++;
-    [self addAnimatedOverlayToAnnotation:tweet];
-    [tweetView fadeOutWithNewTweet:tweet];
-    
-}
-
--(void)viewDidAppear:(BOOL)animated{
-    timer = [NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(performFade) userInfo:nil repeats:YES];
-    [timer fire];
-}
--(void)viewWillDisappear:(BOOL)animated{
-    [timer invalidate];
-    [self removeAnimatedOverlay];
-    
-}
-
--(void)mapView:(MKMapView *)mapView didSelectAnnotationView:(MKAnnotationView *)view{
-    [timer invalidate];
-    [self addAnimatedOverlayToAnnotation:view.annotation];
-    [tweetView fadeOutWithNewTweet:((Tweet *)view.annotation)];
-    timer = [NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(performFade) userInfo:nil repeats:YES];
-}
-
 -(id)initWithMapRegion:(MKCoordinateRegion)coordRegion andMaster:(id)master{
     
     if(self = [super initWithNibName:nil bundle:nil]){
         self.master = master;
-        map = [[MKMapView alloc] initWithFrame:CGRectMake(0, 64, DEVICEWIDTH, DEVICEHEIGHT-64-TV_HEIGHT)];
+        map = [[MKMapView alloc] initWithFrame:CGRectMake(0, NAVBARHEIGHT+STATUSBARHEIGHT, DEVICEWIDTH, DEVICEHEIGHT-64-TV_HEIGHT)];
         [map setScrollEnabled:NO];
         [map setRotateEnabled:NO];
         [map setZoomEnabled:NO];
@@ -91,81 +54,72 @@
     return self;
 }
 
-static AnimatedOverlay *animatedOverlay;
+//* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * VIEW DELEGATE * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
--(void)removeAnimatedOverlay{
-    if(animatedOverlay){
-        [animatedOverlay stopAnimating];
-        [animatedOverlay removeFromSuperview];
-    }
-}
 
--(void)addAnimatedOverlayToAnnotation:(id<MKAnnotation>)annotation{
-    //get a frame around the annotation
-
-    MKCoordinateRegion region = MKCoordinateRegionMakeWithDistance(annotation.coordinate, mapDist/5, mapDist/5);
-    CGRect rect = [map convertRegion:region toRectToView:map];
-    //set up the animated overlay
-    if(!animatedOverlay){
-        animatedOverlay = [[AnimatedOverlay alloc] initWithFrame:rect];
-    }
-    else{
-        [animatedOverlay setFrame:rect];
-    }
-    //add to the map and start the animation
-    [map addSubview:animatedOverlay];
-    [animatedOverlay startAnimatingWithColor:MAINCOLOR andFrame:rect];
-}
-
-- (void)addTweet:(Tweet *)tweet
+- (void)viewDidLoad
 {
-    if ([tweetsDictionary objectForKey:tweet.id_str] == nil)
+    [super viewDidLoad];
+    
+    tweetView = [[TweetView alloc] initWithFrame:CGRectMake(0, DEVICEHEIGHT-TV_HEIGHT, DEVICEWIDTH, TV_HEIGHT)];
+    [self.view addSubview:tweetView];
+    //[self refreshTweets];
+	// Do any additional setup after loading the view.
+    
+    
+    // only for the current view...
+    if(!map.centerCoordinate.latitude && !map.centerCoordinate.longitude )
     {
-        [tweetsDictionary setObject:tweet forKey:tweet.id_str];
-        [map addAnnotation:tweet];
-        //[self.tagArray addObject:tweet.id_str];
+        // this will be called for the current location for a new user.. good place to prompt a new user
+        ((MasterViewController *)self.master).userIsNew = TRUE;
+        [self performSelector:@selector(reloadMap) withObject:self afterDelay:1.5];
     }
-}
-
--(void)startRefreshTimer
-{
-    self.refreshTimer = [NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(timerSelector) userInfo:nil repeats:NO];
-}
-
--(void)timerSelector{
-    NSLog(@"\n\nBOOM %@!!!!!\n\n", cityName);
-    [self refreshTweets];
-}
-
--(void)stopTimer
-{
-    NSLog(@"\n\nInvalidating %@!!!!!\n\n", cityName);
-    [self.refreshTimer invalidate];
-}
-
--(void)refreshTweets{
     
-    self.annotationCount = 0;
-    
-    __block NSDictionary *tweetsResults = nil;
-    [[TwitterDataHandler sharedInstance] fetchTweetsAtCoord:map.centerCoordinate andRange:(0.7*MILES) withBlock:^(NSDictionary *dict) {
-        tweetsResults = dict;
-        [map removeAnnotations:map.annotations];
-        //NSLog(@"\n\ncenter = %f, %f\n\n", map.centerCoordinate.latitude, map.centerCoordinate.longitude);
-        for (NSDictionary *subDic in tweetsResults)
-        {
-            NSString *geoString = [[NSString alloc] initWithFormat:@"%@", [subDic objectForKey:@"geo"]];
-            if (![geoString isEqualToString:@"<null>"])
-                //Tweets that have "geo"
-            {
-                //NSLog(@"geostring is %@\n", geoString);
-                Tweet *tweet = [[Tweet alloc] initWithJSONDic:subDic];
-                [self addTweet:tweet];
-            }
-        }
-        [self performFade];
-    }];
 }
+
+
+-(void)viewDidAppear:(BOOL)animated{
+    timer = [NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(performFade) userInfo:nil repeats:YES];
+    [timer fire];
+}
+-(void)viewWillDisappear:(BOOL)animated{
+    [timer invalidate];
+    [self removeAnimatedOverlay];
+    
+}
+
+//* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * MAP DELEGATE * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+
+-(void)jumpAnimationForAnnotationView:(MKAnnotationView *)view
+{
+    CABasicAnimation *jump = [CABasicAnimation animationWithKeyPath:@"transform.scale"];
+    [jump setAutoreverses:YES];
+    [jump setDuration:0.5];
+    //[jump setRepeatCount:5];
+    [jump setFromValue:[NSNumber numberWithFloat:1.0]];
+    [jump setToValue:[NSNumber numberWithFloat:1.3]];
+    [view.layer addAnimation:jump forKey:@"jump"];
+
+}
+
+-(void)mapView:(MKMapView *)mapView didSelectAnnotationView:(MKAnnotationView *)view{
+    [timer invalidate];
+    [self addAnimatedOverlayToAnnotation:view.annotation];
+    [tweetView fadeOutWithNewTweet:((Tweet *)view.annotation)];
+    
+    // animate selection
+    [self jumpAnimationForAnnotationView:view];
+     
+    timer = [NSTimer scheduledTimerWithTimeInterval:TWEETDURATION target:self selector:@selector(performFade) userInfo:nil repeats:YES];
+}
+
+-(void)mapView:(MKMapView *)mapView didDeselectAnnotationView:(MKAnnotationView *)view
+{
+    [self removeAnimatedOverlay];
+    [view.layer removeAllAnimations];
+}
+
 
 - (MKAnnotationView *)mapView:(MKMapView *)mapView viewForAnnotation:(id<MKAnnotation>)annotation
 {
@@ -190,39 +144,119 @@ static AnimatedOverlay *animatedOverlay;
         UIImage *bird = [UIImage imageNamed:@"bird.png"];
         [annotationView setImage:bird];
         [annotationView setEnabled:YES];
-        
-        [annotationView.layer setTransform:CATransform3DMakeRotation(-M_PI/5, 0, 0, 1)];
+        // rotate birdy
+        [annotationView.layer setTransform:CATransform3DMakeRotation(-M_PI/5, 0, 0.3, 1)];
         
         return annotationView;
     }
     return nil;
 }
 
+//* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * SELECTORS * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-- (void)viewDidLoad
-{
-    [super viewDidLoad];
- 
-    tweetView = [[TweetView alloc] initWithFrame:CGRectMake(0, DEVICEHEIGHT-TV_HEIGHT, DEVICEWIDTH, TV_HEIGHT)];
-    [self.view addSubview:tweetView];
-    //[self refreshTweets];
-	// Do any additional setup after loading the view.
+-(void)refreshTweets{
     
-    if(!map.centerCoordinate.latitude && !map.centerCoordinate.longitude )
-    {
-        // this will be called for the current location for a new user.. good place to prompt a new user
-        ((MasterViewController *)self.master).userIsNew = TRUE;
-        
-        [self performSelector:@selector(reloadMap) withObject:self afterDelay:3.5];
-    }
+    self.annotationCount = 0;
     
+    [[TwitterDataHandler sharedInstance] fetchTweetsAtCoord:map.centerCoordinate andRange:(0.7*MILES) withBlock:^(NSArray *tweets)
+     {
+         NSLog(@"\nrefreshing tweets for %@\n", cityName);
+        [map removeAnnotations:map.annotations];
+         for (Tweet *t in tweets) {
+             [map addAnnotation:t];
+         }
+         NSLog(@"\n annotation count is %lu\n", (unsigned long)[map.annotations count]);
+        [self performFade];
+    }];
 }
+
+
+- (void)addTweet:(Tweet *)tweet
+{
+    if ([tweetsDictionary objectForKey:tweet.id_str] == nil)
+    {
+        [tweetsDictionary setObject:tweet forKey:tweet.id_str];
+        [map addAnnotation:tweet];
+        //[self.tagArray addObject:tweet.id_str];
+    }
+}
+
 
 -(void)reloadMap
 {
     map.region = MKCoordinateRegionMakeWithDistance([[LocationGetter sharedInstance]getCoord], 1.5*METERS_PER_MILE*MILES, 1.5*METERS_PER_MILE*MILES);
     [self refreshTweets];
 }
+
+-(void)performFade{
+    
+    if ([map.annotations count] == 0) {
+        Tweet *blankTweet = [[Tweet alloc] init];
+        blankTweet.text = @"No recent tweets for this area :-(";
+        blankTweet.favorited = NO;
+        blankTweet.retweeted = NO;
+        [tweetView fadeOutWithNewTweet:blankTweet];
+        return;
+    }
+    if (self.annotationCount == map.annotations.count) {
+        self.annotationCount = 0;
+    }
+    Tweet *tweet = (Tweet *)[map.annotations objectAtIndex:self.annotationCount];
+    self.annotationCount++;
+    [self addAnimatedOverlayToAnnotation:tweet];
+    [tweetView fadeOutWithNewTweet:tweet];
+    
+}
+
+-(void)startRefreshTimer
+{
+    self.refreshTimer = [NSTimer scheduledTimerWithTimeInterval:TWEETDURATION target:self selector:@selector(timerSelector) userInfo:nil repeats:NO];
+}
+
+-(void)timerSelector{
+    NSLog(@"\n\nBOOM %@!!!!!\n\n", cityName);
+    [self refreshTweets];
+}
+
+-(void)stopTimer
+{
+    NSLog(@"\n\nInvalidating %@!!!!!\n\n", cityName);
+    [self.refreshTimer invalidate];
+}
+
+
+
+
+//* * * * * * * * * * * * * * * * * * * * * * * * * * * * ANIMATED OVERLAY * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+
+static AnimatedOverlay *animatedOverlay;
+
+-(void)removeAnimatedOverlay{
+    if(animatedOverlay){
+        [animatedOverlay stopAnimating];
+        [animatedOverlay removeFromSuperview];
+    }
+}
+
+-(void)addAnimatedOverlayToAnnotation:(id<MKAnnotation>)annotation{
+    //get a frame around the annotation
+    
+    MKCoordinateRegion region = MKCoordinateRegionMakeWithDistance(annotation.coordinate, mapDist/5, mapDist/5);
+    CGRect rect = [map convertRegion:region toRectToView:map];
+    //set up the animated overlay
+    if(!animatedOverlay){
+        animatedOverlay = [[AnimatedOverlay alloc] initWithFrame:rect];
+    }
+    else{
+        [animatedOverlay setFrame:rect];
+    }
+    //add to the map and start the animation
+    [map addSubview:animatedOverlay];
+    [animatedOverlay startAnimatingWithColor:MAINCOLOR andFrame:rect];
+}
+
+
 
 - (void)didReceiveMemoryWarning
 {

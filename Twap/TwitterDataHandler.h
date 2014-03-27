@@ -21,13 +21,10 @@
 @property (nonatomic, weak) id<TwitterDataDelegate> delegate;
 @property (nonatomic) NSUInteger numRegions;
 @property (nonatomic) NSUInteger currentIndex;
-@property (nonatomic, strong) NSMutableDictionary *leftTweets;
-@property (nonatomic, strong) NSMutableDictionary *centerTweets;
-@property (nonatomic, strong) NSMutableDictionary *rightTweets;
 @property (nonatomic, strong) TwitterDeveloper *twitterDeveloper;
 
 +(id) sharedInstance;
 
-- (void)fetchTweetsAtCoord:(CLLocationCoordinate2D)coord andRange:(double)range withBlock:(void (^) (NSDictionary * dict))block;
+- (void)fetchTweetsAtCoord:(CLLocationCoordinate2D)coord andRange:(double)range withBlock:(void (^) (NSArray * tweets))block;
 
 @end

@@ -13,7 +13,10 @@
 #define DEVICEWIDTH [UIScreen mainScreen].bounds.size.width
 #define PAGEVIEWOFFSET 37
 
-#define BARBUTTONFRAME CGRectMake(0, 0, 30, 30)
+#define NAVBARHEIGHT 44
+#define STATUSBARHEIGHT 20
+
+#define BARBUTTONFRAME CGRectMake(0, 0, 25, 25)
 
 #define MAINCOLOR [UIColor colorWithRed:37/255.0f green:41/255.0f blue:138/255.0f alpha:1.0f]
 
@@ -23,5 +26,7 @@
 #define KEYBOARDHEIGHT 216
 
 #define CITYLIMIT 3
+
+#define TWEETDURATION 5
 
 #endif

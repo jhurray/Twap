@@ -30,9 +30,9 @@
     return self;
 }
 
-- (void)tweetsSearch:(NSString *)URLString GeoLocation:(CLLocationCoordinate2D)geocode Range:(double)range withBlock:(void (^)(NSData *data))block
+- (void)tweetsSearch:(NSString *)URLString GeoLocation:(CLLocationCoordinate2D)geocode Range:(double)range withBlock:(void (^)(NSArray *arr))block
 {
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
         ACAccountStore *account = [[ACAccountStore alloc] init];
         ACAccountType *accountType = [account accountTypeWithAccountTypeIdentifier:ACAccountTypeIdentifierTwitter];
         [account requestAccessToAccountsWithType:accountType options:nil completion:^(BOOL granted, NSError *error) {
@@ -52,8 +52,26 @@
                     [request setAccount:arrayOfAccounts[0]];
                     [request performRequestWithHandler:^(NSData *responseData, NSHTTPURLResponse *urlResponse, NSError *error)
                      {
+                         //NSError *error = nil;
+                         NSDictionary *tweetsDic = [NSJSONSerialization JSONObjectWithData:responseData options:NSJSONReadingMutableContainers|NSJSONReadingAllowFragments error:&error];
+                         tweetsDic = [tweetsDic objectForKey:@"statuses"];
+                         NSLog(@"\nFetching tweets...%lu\n", (unsigned long)[tweetsDic count]);
+                         
+                         NSMutableArray *geoTweets = [NSMutableArray array];
+                         for (NSDictionary *subDic in tweetsDic)
+                         {
+                             NSString *geoString = [[NSString alloc] initWithFormat:@"%@", [subDic objectForKey:@"geo"]];
+                             if (![geoString isEqualToString:@"<null>"])
+                                 //Tweets that have "geo"
+                             {
+                                 //NSLog(@"geostring is %@\n", geoString);
+                                 Tweet *tweet = [[Tweet alloc] initWithJSONDic:subDic];
+                                 [geoTweets addObject:tweet];
+                                 
+                             }
+                         }
                          dispatch_sync(dispatch_get_main_queue(), ^{
-                            block(responseData);
+                             block([NSArray arrayWithArray:geoTweets]);
                          });
                      }];
                 }
@@ -70,60 +88,6 @@
             
         }];
     });
-    
-}
-
-- (NSData *)tweetsSearch:(NSString *)URLString GeoLocation:(CLLocationCoordinate2D)geocode Range:(double)range
-{
-    ACAccountStore *account = [[ACAccountStore alloc] init];
-    ACAccountType *accountType = [account accountTypeWithAccountTypeIdentifier:ACAccountTypeIdentifierTwitter];
-    __block NSData *tweetsData = nil;
-    [account requestAccessToAccountsWithType:accountType options:nil completion:[^(BOOL granted, NSError *error)
-    {
-        if (granted)
-        {
-            NSArray *arrayOfAccounts = [account accountsWithAccountType:accountType];
-            if (arrayOfAccounts.count > 0)
-            {
-                /*
-                ACAccount *twitter_account = [arrayOfAccounts objectAtIndex:0];
-                ACAccountCredential *twitter_account_credential = [[ACAccountCredential alloc] initWithOAuthToken:self.access_token tokenSecret:self.access_token_secret];
-                [twitter_account setCredential:twitter_account_credential];
-                 */
-                
-                NSURL *requestURL = [NSURL URLWithString:URLString];
-                NSMutableDictionary *parameters = [[NSMutableDictionary alloc] init];
-                NSString *geoString = [[NSString alloc] initWithFormat:@"%f,%f,%fmi", geocode.latitude, geocode.longitude, range];
-                [parameters setObject:geoString forKey:@"geocode"];
-                [parameters setObject:@"500" forKey:@"count"];
-                //[parameters setObject:@"" forKey:@"q"];
-                SLRequest *request = [SLRequest requestForServiceType:SLServiceTypeTwitter requestMethod:SLRequestMethodGET URL:requestURL parameters:parameters];
-                [request setAccount:arrayOfAccounts[0]];
-                [request performRequestWithHandler:^(NSData *responseData, NSHTTPURLResponse *urlResponse, NSError *error)
-                 {
-                     tweetsData = responseData;
-                 }];
-            }
-            else
-            {
-                NSLog(@"No available account!");
-            }
-        }
-        else
-        {
-            NSLog(@"Not granted!");
-        }
-    }copy]];
-    while (tweetsData == nil)
-    {
-       sleep(1);
-    }
-    return tweetsData;
-}
-
-- (NSData *)tweetsSearch: (NSString *)URLString GeoLocation:(CLLocationCoordinate2D)geocode
-{
-    return [self tweetsSearch:URLString GeoLocation:geocode Range:1];
 }
 
 - (void)retweet:(NSString *)id_str

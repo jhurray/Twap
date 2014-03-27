@@ -12,7 +12,7 @@
 
 @implementation TweetView
 
-@synthesize id_str, retweet, favorite, pic, text, timeStamp, name, favorited;
+@synthesize id_str, retweet, favorite, pic, text, timeStamp, name, favorited, retweetIds, favoriteIds;
 
 
 -(UIFont *)fontWithSize:(CGFloat)size
@@ -27,6 +27,11 @@
         [self setAlpha:0.9];
         // Initialization code
         [self setBackgroundColor:MAINCOLOR];
+        
+        // arrays
+        retweetIds = [NSMutableArray array];
+        favoriteIds = [NSMutableArray array];
+        
         //retweet
         retweet = [UIButton buttonWithType:UIButtonTypeCustom];
         [retweet setBackgroundImage:[self changeImage:[UIImage imageNamed:@"retweet.png"] toColor:[UIColor whiteColor]] forState:UIControlStateNormal];
@@ -92,23 +97,57 @@
         [self addSubview:text];
         [self addSubview:pic];
         
-        UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTapGesture:)];
-        [self addGestureRecognizer:tap];
+        UITapGestureRecognizer *tapText = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTextTapGesture:)];
+        [self.text setUserInteractionEnabled:YES];
+        [self.text addGestureRecognizer:tapText];
         
-        //[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"twitter://status?id=12345"]];
-
+        UITapGestureRecognizer *tapName = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleNameTapGesture:)];
+        [self.pic setUserInteractionEnabled:YES];
+        [self.pic addGestureRecognizer:tapName];
+        [self.name setUserInteractionEnabled:YES];
+        [self.name addGestureRecognizer:tapName];
         
     }
     return self;
 }
+//twitter://user?screen_name=lorenb
 
 
--(void)handleTapGesture:(id)sender
+-(void)goToTweet
+{
+    NSString *urlString = [NSString stringWithFormat:@"twitter://status?id=%@", self.tweet.id_str];
+    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:urlString]];
+}
+
+-(void)goToProfile
+{
+    NSString *urlString = [NSString stringWithFormat:@"twitter://user?screen_name=%@", self.tweet.name];
+    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:urlString]];
+}
+
+
+-(void)handleNameTapGesture:(id)sender
 {
     if(self.tweet)
     {
-        NSString *urlString = [NSString stringWithFormat:@"twitter://status?id=%@", self.tweet.id_str];
-        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:urlString]];
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Are you sure"
+                                                        message:@"you want to leave this app to view this users profile?"
+                                                       delegate:self cancelButtonTitle:@"NO" otherButtonTitles:@"YES", nil];
+        alert.tag = 2;
+        [alert show];
+    }
+}
+
+-(void)handleTextTapGesture:(id)sender
+{
+    if(self.tweet)
+    {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Are you sure"
+                                                        message:@"you want to leave this app to view this tweet?"
+             
+                                                       delegate:self cancelButtonTitle:@"NO" otherButtonTitles:@"YES", nil];
+        alert.tag = 1;
+        [alert show];
     }
 }
 
@@ -135,30 +174,66 @@
     dispatch_async(background, ^{
         [[[TwitterDataHandler sharedInstance] twitterDeveloper] retweet:id_str];
     });
-    
+    [retweetIds addObject:id_str];
     [self hasBeenRetweeted];
 }
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
 {
     NSString *title = [alertView buttonTitleAtIndex:buttonIndex];
-    if([title isEqualToString:@"YES"])
-    {
-        [self finishRetweet];
-    }
-    else if([title isEqualToString:@"NO"])
-    {
-        return;
+    switch (alertView.tag) {
+        case 0:
+            // FOR RETWEET
+            if([title isEqualToString:@"YES"])
+            {
+                [self finishRetweet];
+            }
+            else if([title isEqualToString:@"NO"])
+            {
+                return;
+            }
+            break;
+            
+        case 1:
+            //FOR VIEWING TWEET
+            if([title isEqualToString:@"YES"])
+            {
+                [self goToTweet];
+            }
+            else if([title isEqualToString:@"NO"])
+            {
+                return;
+            }
+            break;
+            
+        case 2:
+            //FOR VIEWING PROFILE
+            if([title isEqualToString:@"YES"])
+            {
+                [self goToProfile];
+            }
+            else if([title isEqualToString:@"NO"])
+            {
+                return;
+            }
+            break;
+            
+        default:
+            break;
     }
     
 }
 
 -(void)retweetBtnPress
 {
+    if (retweet) {
+        return;
+    }
     NSLog(@"Retweet pressed\n");
     UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Are you sure"
                                                     message:@"you want to retweet this?"
                                                    delegate:self cancelButtonTitle:@"NO" otherButtonTitles:@"YES", nil];
+    alert.tag = 0;
     [alert show];
     
 }
@@ -166,19 +241,20 @@
 -(void)favoriteBtnPress
 {
      NSLog(@"Favorite pressed\n");
-    dispatch_queue_t background2 = dispatch_queue_create("background2", NULL);
-    dispatch_async(background2, ^{
-        //[[[TwitterDataHandler sharedInstance] twitterDeveloper] favorite:id_str Is_Create:(!favorited)];
-    });
     if(favorited){
         [self hasBeenUnfavorited];
         [[[TwitterDataHandler sharedInstance] twitterDeveloper] favorite:id_str Is_Create:NO];
         favorited = false;
+        self.tweet.favorited = false;
+        [favoriteIds removeObject:id_str];
     }
     else{
         [self hasBeenFavorited];
         [[[TwitterDataHandler sharedInstance] twitterDeveloper] favorite:id_str Is_Create:YES];
         favorited = true;
+        self.tweet.favorited = true;
+        [favoriteIds addObject:id_str];
+        
     }
 }
 
@@ -214,10 +290,14 @@
     [timeStamp setText:tweet.timeStamp];
     [name setText:tweet.name];
     favorited = tweet.favorited;
-    if(tweet.retweeted){
+    if([retweetIds containsObject:tweet.id_str]){
         [self hasBeenRetweeted];
     }
-    if(tweet.favorited){
+    else
+    {
+        [self unhiglightRetweet];
+    }
+    if([favoriteIds containsObject:tweet.id_str]){
         [self hasBeenFavorited];
     }
     

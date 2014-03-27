@@ -17,7 +17,7 @@
 @implementation MasterViewController
 
 @synthesize pageController, viewControllers, currentMapController;
-@synthesize fadeView, navBarTitle, cities, addRegion, userIsNew;
+@synthesize fadeView, navBarTitle, cities, addRegion, userIsNew, getTwapping;
 
 
 -(id)initWithCities:(NSArray *)cityArray
@@ -28,23 +28,17 @@
         
         viewControllers = [NSMutableArray array];
         
-        CLLocationCoordinate2D zoomLocation;
-        zoomLocation.latitude = [[LocationGetter sharedInstance] getLatitude];
-        zoomLocation.longitude = [[LocationGetter sharedInstance] getLongitude];
-        
-        MKCoordinateRegion viewRegion = MKCoordinateRegionMakeWithDistance(zoomLocation, 1.5*MILES*METERS_PER_MILE,1.5*MILES*METERS_PER_MILE);
-        MapRegionViewController *currentLocationMapRegion;
-        currentLocationMapRegion = [[MapRegionViewController alloc] initWithMapRegion:viewRegion andMaster:self];
-        currentLocationMapRegion.cityName = @"Current Location";
-        currentLocationMapRegion.index = [viewControllers count];
-        [self.viewControllers addObject:currentLocationMapRegion];
-        
         cities = [NSMutableArray arrayWithArray:cityArray];
         
-        [self loadCities];
+        addRegion = [[AddRegionView alloc] initWithFrame:CGRectMake(0, 64, DEVICEWIDTH, DEVICEHEIGHT-64-KEYBOARDHEIGHT)];
+        
     }
     return self;
 }
+
+
+//* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * VIEW DELEGATES * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
 
 - (void)viewDidLoad
 {
@@ -54,6 +48,7 @@
     navBarTitle.backgroundColor = [UIColor clearColor];
     navBarTitle.textAlignment = NSTextAlignmentCenter;
     navBarTitle.textColor = [UIColor whiteColor];
+    [navBarTitle setAdjustsFontSizeToFitWidth:YES];
     navBarTitle.font = [UIFont fontWithName:@"GillSans-Light" size:24];
     navBarTitle.text = @"Current Location";
     [self.navigationItem setTitleView:navBarTitle];
@@ -61,9 +56,8 @@
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(refreshCurrentView)];
     [self.navigationItem.leftBarButtonItem setTintColor:[UIColor whiteColor]];
     
-    //self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addRegionToPages)];
-    //[self.navigationItem.rightBarButtonItem setTintColor:[UIColor whiteColor]];
-    UIButton *btn = [UIButton buttonWithType:UIButtonTypeContactAdd];
+    UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
+    [btn setBackgroundImage:[self changeImage:[UIImage imageNamed:@"addButton.png"] toColor:[UIColor whiteColor]] forState:UIControlStateNormal];
     [btn setBackgroundColor:[UIColor clearColor]];
     [btn setTintColor:[UIColor whiteColor]];
     [btn setFrame:BARBUTTONFRAME];
@@ -90,6 +84,19 @@
     [self.navigationController setNavigationBarHidden:YES animated:NO];
     [self.navigationController.navigationBar setBarStyle:UIBarStyleBlackTranslucent];
     
+    
+    CLLocationCoordinate2D zoomLocation;
+    zoomLocation.latitude = [[LocationGetter sharedInstance] getLatitude];
+    zoomLocation.longitude = [[LocationGetter sharedInstance] getLongitude];
+    
+    MKCoordinateRegion viewRegion = MKCoordinateRegionMakeWithDistance(zoomLocation, 1.5*MILES*METERS_PER_MILE,1.5*MILES*METERS_PER_MILE);
+    MapRegionViewController *currentLocationMapRegion;
+    currentLocationMapRegion = [[MapRegionViewController alloc] initWithMapRegion:viewRegion andMaster:self];
+    currentLocationMapRegion.cityName = @"Current Location";
+    currentLocationMapRegion.index = [viewControllers count];
+    [self.viewControllers addObject:currentLocationMapRegion];
+    
+    
     //adding the page view controller
     pageController = [[UIPageViewController alloc ] initWithTransitionStyle:UIPageViewControllerTransitionStyleScroll navigationOrientation:UIPageViewControllerNavigationOrientationHorizontal options:nil];
     pageController.delegate = self;
@@ -108,17 +115,21 @@
     fadeView = [[UIView alloc] initWithFrame:self.view.frame];
     [fadeView setBackgroundColor:MAINCOLOR];
     
-    UILabel *getTwapping = [[UILabel alloc] initWithFrame:CGRectMake(0, DEVICEHEIGHT/2-100, 320, 200)];
+    getTwapping = [[UILabel alloc] initWithFrame:CGRectMake(0, DEVICEHEIGHT/2-100, 320, 200)];
     [getTwapping setText:@"Get Ready..."];
     [getTwapping setTextColor:[UIColor whiteColor]];
     [getTwapping setTextAlignment:NSTextAlignmentCenter];
     [getTwapping setFont:[UIFont fontWithName:@"GillSans-Light" size:45]];
     [fadeView addSubview:getTwapping];
     [self.view addSubview:fadeView];
-	// Do any additional setup after loading the view.
-    [self countdownAnimation:getTwapping];
-    [self performSelector:@selector(loadUpMapViews) withObject:self afterDelay:5];
+	// Do any additional setup after setting the fade view.
+    
+    [self loadCities];
+
 }
+
+//* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * FIRST TIME USE * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
 
 -(void)promptNewUser
 {
@@ -140,9 +151,11 @@
     [currLocVC reloadMap];
     [navBarTitle setText:currLocVC.cityName];
     [self removeFadeView];
-
-    
 }
+
+
+//* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * INITIALIZING * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
 
 -(void)loadCities{
     
@@ -170,10 +183,88 @@
             [self loadCities];
             NSLog(@"%lu, %lu", (unsigned long)cities.count, (unsigned long)viewControllers.count);
         }
+        else
+        {
+            NSLog(@"\n\nFinished loading cities\n\n");
+            [UIView animateWithDuration:0.5 delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+                [getTwapping setAlpha:0.0];
+                
+            } completion:^(BOOL finished){
+                [getTwapping setText:@"Get Set..."];
+                [UIView animateWithDuration:0.5 delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+                    [getTwapping setAlpha:1.0];
+                    
+                } completion:^(BOOL finished){
+                
+                }];
+            }];
+            [self performSelector:@selector(loadUpMapViews) withObject:self afterDelay:1.5];
+        }
+    }];
+}
+
+
+-(void)loadUpMapViews
+{
+    for (MapRegionViewController *m in viewControllers) {
+        [UIView animateWithDuration:0.3 delay:0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+            
+            NSArray *vcs = [NSArray arrayWithObject:m];
+            [pageController setViewControllers:vcs direction:UIPageViewControllerNavigationDirectionForward animated:YES completion:^(BOOL finished) {
+                //any completion code???
+            }];
+        } completion:^(BOOL finished){
+            
+        }];
+    }
+    
+    __weak MasterViewController *me = self;
+    __block UILabel *b_label = getTwapping;
+    NSArray *vcs = [NSArray arrayWithObject:viewControllers[0]];
+    [pageController setViewControllers:vcs direction:UIPageViewControllerNavigationDirectionForward animated:YES completion:^(BOOL finished) {
+        [me performSelector:@selector(removeFadeView) withObject:nil afterDelay:2.0];
+        NSLog(@"\n\nFinished loading map views\n\n");
+        
+        [UIView animateWithDuration:0.7 delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+            [b_label setAlpha:0.0];
+            
+        } completion:^(BOOL finished){
+            [b_label setText:@"Get Twapping!!!"];
+            [UIView animateWithDuration:0.7 delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+                [b_label setAlpha:1.0];
+                
+            } completion:^(BOOL finished){
+                if (me.userIsNew) {
+                    [me promptNewUser];
+                }
+            }];
+        }];
+        
+    }];
+}
+
+
+
+//* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * SELECTORS * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+-(void)removeFadeView{
+    
+    if(![self.view.subviews containsObject:fadeView]){
+        return;
+    }
+    
+    [UIView animateWithDuration:0.8 delay:0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+        [fadeView setAlpha:0];
+        [self.navigationController setNavigationBarHidden:NO animated:YES];
+        
+    } completion:^(BOOL finished){
+        
+        [fadeView removeFromSuperview];
     }];
     
 }
 
+//* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * REFRESHERS * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 -(void)refreshCurrentView{
     
@@ -195,35 +286,14 @@
     
 }
 
-static NSTimer *timer;
--(void)refreshAll{
-    
-    [fadeView setAlpha:1];
-    for (UILabel *l in fadeView.subviews) {
-        [l setText:@"Refreshing..."];
-    }
-    [self.navigationController setNavigationBarHidden:YES animated:YES];
-    [self.view addSubview:fadeView];
-    
-    for (MapRegionViewController *m in viewControllers) {
 
-        [m refreshTweets];
-        
-    }
-    timer = [NSTimer scheduledTimerWithTimeInterval:4 target:self selector:@selector(removeFadeView) userInfo:Nil repeats:NO];
-}
+//* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * ADD REGION FUNCS * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-
-                       
 -(void)addRegionToPages{
     
     CABasicAnimation *rotate = [CABasicAnimation animationWithKeyPath:@"transform.rotation.z"];
     [rotate setRemovedOnCompletion:NO];
     [rotate setFillMode:kCAFillModeForwards];
-    
-    if (!addRegion) {
-        addRegion = [[AddRegionView alloc] initWithFrame:CGRectMake(0, 64, DEVICEWIDTH, DEVICEHEIGHT-64-KEYBOARDHEIGHT)];
-    }
     
     if(addRegion.shown)
     {
@@ -298,84 +368,7 @@ static NSTimer *timer;
 }
 
 
-
--(void)countdownAnimation:(UILabel *)label{
-    [label setAlpha:1.0];
-    [UIView animateWithDuration:0.7 delay:0.7 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
-        [label setAlpha:0.0];
-        
-    } completion:^(BOOL finished){
-        [label setText:@"Get Set..."];
-        [UIView animateWithDuration:0.7 delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
-            [label setAlpha:1.0];
-            
-        } completion:^(BOOL finished){
-            [UIView animateWithDuration:0.7 delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
-                [label setAlpha:0.0];
-                
-            } completion:^(BOOL finished){
-                [label setText:@"Get Twapping!!!"];
-                [UIView animateWithDuration:0.7 delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
-                    [label setAlpha:1.0];
-                    
-                } completion:^(BOOL finished){
-                    NSLog(@"Done with animation");
-                    if(userIsNew)
-                    {
-                        [self promptNewUser];
-                    }
-                    // should take care of fuck ups 
-                    [self performSelector:@selector(removeFadeView) withObject:self afterDelay:3];
-                }];
-            }];
-        }];
-    }];
-    
-}
-
-
-
--(void)loadUpMapViews
-{
-    
-    for (MapRegionViewController *m in viewControllers) {
-        [UIView animateWithDuration:0.3 delay:0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
-            
-            NSArray *vcs = [NSArray arrayWithObject:m];
-            [pageController setViewControllers:vcs direction:UIPageViewControllerNavigationDirectionForward animated:YES completion:^(BOOL finished) {
-                //any completion code???
-            }];
-        } completion:^(BOOL finished){
-            
-        }];
-    }
-    
-    __weak MasterViewController *me = self;
-    NSArray *vcs = [NSArray arrayWithObject:viewControllers[0]];
-    [pageController setViewControllers:vcs direction:UIPageViewControllerNavigationDirectionForward animated:YES completion:^(BOOL finished) {
-        [me performSelector:@selector(removeFadeView) withObject:nil afterDelay:2.0];
-    }];
-    
-    //[self removeFadeView];
-}
-
-
--(void)removeFadeView{
-    
-    if(![self.view.subviews containsObject:fadeView]){
-        return;
-    }
-    
-    [UIView animateWithDuration:0.8 delay:0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
-        [fadeView setAlpha:0];
-        [self.navigationController setNavigationBarHidden:NO animated:YES];
-        
-    } completion:^(BOOL finished){
-        
-        [fadeView removeFromSuperview];
-    }];
-    
-}
+//* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * PAGE VIEW CONTROLLER * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 - (NSInteger)presentationCountForPageViewController:(UIPageViewController *)pageViewController {
     // The number of items reflected in the page indicator.
@@ -453,6 +446,22 @@ static NSString *cityName;
 {
     [pageController setDoubleSided:YES];
     return UIPageViewControllerSpineLocationMid;
+}
+
+-(UIImage *)changeImage:(UIImage *)image toColor:(UIColor *)color
+{
+    CGRect rect = CGRectMake(0, 0, 200, 200);
+    UIGraphicsBeginImageContext(rect.size);
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    CGContextClipToMask(context, rect, image.CGImage);
+    CGContextSetFillColorWithColor(context, [color CGColor]);
+    CGContextFillRect(context, rect);
+    UIImage *img = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    
+    UIImage *flippedImage = [UIImage imageWithCGImage:img.CGImage
+                                                scale:1.0 orientation: UIImageOrientationDownMirrored];
+    return flippedImage;
 }
 
 

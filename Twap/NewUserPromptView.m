@@ -8,6 +8,8 @@
 
 #import "NewUserPromptView.h"
 
+#define promptXOffset 20
+
 @implementation NewUserPromptView
 
 @synthesize prompt1, prompt2, prompt3, title, btn, delegate;
@@ -20,8 +22,9 @@
         [self setBackgroundColor:MAINCOLOR];
         [self setAlpha:1];
         [self setUserInteractionEnabled:YES];
+        
         //prompts and titles
-        CGFloat promptXOffset = 20;
+
         //title
         title = [[UILabel alloc] initWithFrame:CGRectMake(15, 95, DEVICEWIDTH-30, 50)];
         [title setText:@"Welcome to the TWAP"];
@@ -66,7 +69,7 @@
         [btn setFrame:CGRectMake(-2, DEVICEHEIGHT*5/6, DEVICEWIDTH+4, btnSize)];
         [btn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
         [btn.titleLabel setFont:[UIFont fontWithName:@"GillSans-Light" size:24]];
-        [btn setTitle:@"Get Twapping!" forState:UIControlStateNormal];
+        [btn setTitle:@"Tell me more..." forState:UIControlStateNormal];
         [btn.titleLabel setFrame:btn.frame];
         [btn.titleLabel setAdjustsFontSizeToFitWidth:YES];
         [btn.layer setBorderColor:[UIColor whiteColor].CGColor];
@@ -106,8 +109,47 @@
     } completion:nil];
 }
 
+-(void)buttonAnimation2
+{
+    [self addSubview:btn];
+    [btn setUserInteractionEnabled:YES];
+}
+
 -(void)buttonPressed
 {
+    if (btn.tag != 69) {
+        
+        [prompt3.layer removeAllAnimations];
+        [btn setUserInteractionEnabled:NO];
+        [UIView animateWithDuration:0.5 delay:0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+            [title setAlpha:0];
+            [prompt1 setAlpha:0];
+            [prompt2 setAlpha:0];
+            [prompt3 setAlpha:0];
+            [btn setAlpha:0];
+            [prompt3 setFrame:CGRectMake(promptXOffset, DEVICEHEIGHT*4/6, DEVICEWIDTH-2*promptXOffset, 30)];
+            
+        } completion:^(BOOL finished) {
+            [btn removeFromSuperview];
+            [title setText:@"Rules of the TWAP"];
+            [prompt1 setText:@"Touch tweets to see in Twitter app"];
+            [prompt2 setText:@"Touch the plus button to add new regions"];
+            [prompt3 setText:@"Touch the refresh button to refresh tweets"];
+            [btn setTitle:@"Get Twapping!!!" forState:UIControlStateNormal];
+            [UIView animateWithDuration:0.5 delay:0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+                [title setAlpha:1];
+                [prompt1 setAlpha:1];
+                [prompt2 setAlpha:1];
+                [prompt3 setAlpha:1];
+                
+            } completion:^(BOOL finished) {
+                [self performSelector:@selector(buttonAnimation2) withObject:self afterDelay:2.5];
+            }];
+        }];
+        
+        btn.tag = 69;
+        return;
+    }
     
     [self.delegate finishedTutorial];
     [UIView animateWithDuration:0.5 delay:0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
