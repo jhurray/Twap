@@ -14,6 +14,7 @@
 //Tweets
 @property (nonatomic, strong) NSString *id_str;
 @property (nonatomic, strong) NSString *name;
+@property (nonatomic, strong) NSString *handle;
 @property (nonatomic, strong) NSString *text;
 @property (nonatomic, strong) NSString *timeStamp;
 @property (nonatomic, strong) NSString *imageURL;

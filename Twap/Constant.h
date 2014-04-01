@@ -16,7 +16,7 @@
 #define NAVBARHEIGHT 44
 #define STATUSBARHEIGHT 20
 
-#define BARBUTTONFRAME CGRectMake(0, 0, 25, 25)
+#define BARBUTTONFRAME CGRectMake(0, 0, 20, 20)
 
 #define MAINCOLOR [UIColor colorWithRed:37/255.0f green:41/255.0f blue:138/255.0f alpha:1.0f]
 

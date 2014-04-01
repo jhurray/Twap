@@ -78,6 +78,7 @@
 }
 
 
+
 -(void)viewDidAppear:(BOOL)animated{
     timer = [NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(performFade) userInfo:nil repeats:YES];
     [timer fire];

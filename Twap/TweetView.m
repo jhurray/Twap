@@ -102,8 +102,9 @@
         [self.text addGestureRecognizer:tapText];
         
         UITapGestureRecognizer *tapName = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleNameTapGesture:)];
+        UITapGestureRecognizer *tapPic = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleNameTapGesture:)];
         [self.pic setUserInteractionEnabled:YES];
-        [self.pic addGestureRecognizer:tapName];
+        [self.pic addGestureRecognizer:tapPic];
         [self.name setUserInteractionEnabled:YES];
         [self.name addGestureRecognizer:tapName];
         
@@ -115,13 +116,15 @@
 
 -(void)goToTweet
 {
+    NSLog(@"going to tweet!!");
     NSString *urlString = [NSString stringWithFormat:@"twitter://status?id=%@", self.tweet.id_str];
     [[UIApplication sharedApplication] openURL:[NSURL URLWithString:urlString]];
 }
 
 -(void)goToProfile
 {
-    NSString *urlString = [NSString stringWithFormat:@"twitter://user?screen_name=%@", self.tweet.name];
+    NSString *urlString = [NSString stringWithFormat:@"twitter://user?screen_name=%@", self.tweet.handle];
+    NSLog(@"going to profile!!\n\n%@\n", urlString);
     [[UIApplication sharedApplication] openURL:[NSURL URLWithString:urlString]];
 }
 

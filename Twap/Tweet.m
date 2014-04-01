@@ -21,6 +21,7 @@
 @synthesize pinned;
 @synthesize favorited;
 @synthesize retweeted;
+@synthesize handle;
 
 - (Tweet *)initWithJSONDic:(NSDictionary *)tweetDic {
     self = [super init];
@@ -29,14 +30,18 @@
     [self setId_str:[[NSString alloc] initWithFormat:@"%@", [tweetDic objectForKey:@"id_str"]]];
     [self setTimeStamp:[tweetDic objectForKey:@"created_at"]];
     subDic = [tweetDic objectForKey:@"user"];
+    
+    // set up user
     [self setName:[[NSString alloc] initWithFormat:@"%@", [subDic objectForKey:@"name"]]];
+    [self setHandle: [NSString stringWithFormat:@"%@", [subDic objectForKey:@"screen_name"]]];
     [self setImageURL:[[NSString alloc] initWithFormat:@"%@", [subDic objectForKey:@"profile_image_url"]]];
     [self setText:[[NSString alloc] initWithFormat:@"%@", [tweetDic objectForKey:@"text"]]];
     NSURL* url = [NSURL URLWithString:self.imageURL];
     NSData* imageData = [[NSData alloc] initWithContentsOfURL:url];
     [self setImage:[[UIImage alloc] initWithData:imageData]];
-    
     [self setTitle:[[NSString alloc] initWithFormat:@"%@", self.name]];
+    
+    // set up geo
     subDic = [tweetDic objectForKey:@"geo"];
     NSArray *array = [subDic objectForKey:@"coordinates"];
     CLLocationCoordinate2D tweetCoordinate;

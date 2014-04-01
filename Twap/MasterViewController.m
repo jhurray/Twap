@@ -133,6 +133,10 @@
 
 -(void)promptNewUser
 {
+    // disable nav bar buttons
+    [self.navigationItem.leftBarButtonItem setEnabled:NO];
+    [self.navigationItem.rightBarButtonItem setEnabled:NO];
+    
     NewUserPromptView *prompt = [[NewUserPromptView alloc] initWithFrame:self.view.frame];
     [prompt setDelegate:self];
     [UIView animateWithDuration:0.5 delay:0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
@@ -144,6 +148,10 @@
 
 -(void)finishedTutorial
 {
+    //enable nav bar buttons
+    [self.navigationItem.leftBarButtonItem setEnabled:YES];
+    [self.navigationItem.rightBarButtonItem setEnabled:YES];
+    
     MapRegionViewController *currLocVC = viewControllers[0];
     [pageController setViewControllers:[NSArray arrayWithObject:currLocVC] direction:UIPageViewControllerNavigationDirectionForward animated:NO completion:^(BOOL finished) {
         
